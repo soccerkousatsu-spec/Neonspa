@@ -3240,7 +3240,7 @@ if (u.charId === 'pop' && !t.hasShield) {
     // ▼▼▼ Pizza time: ボス攻撃時だけCDを減らす ▼▼▼
     if (u.charId === 'pizza') {
         if (t.id.includes('boss')) {
-            u.cd = 1.0; // ★ボスを殴った時は「1秒」にする（ここを好きな秒数に変えてOK）
+            u.cd = 4.0; // ★ボスを殴った時は「1秒」にする（ここを好きな秒数に変えてOK）
         } else {
             u.cd = 3.0; // それ以外の時は「3秒」
         }

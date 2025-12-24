@@ -2203,6 +2203,9 @@ const BATTLE = {
   },
 
   showResult: (result) => {
+    // ★この1行を追加してください！
+    BATTLE_STATE.lastResult = result; 
+
     // 1. 時を止める
     BATTLE_STATE.running = false;
     

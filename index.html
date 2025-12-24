@@ -2321,11 +2321,13 @@ const BATTLE = {
     SOUND.stopBGM();
     document.getElementById('result-modal').style.display = 'none';
 
-    if (BATTLE_STATE.lastResult === 'lose' || BATTLE_STATE.lastResult === 'clear') {
+    // ▼▼▼ Practiceならタイトルへ、Survivalならショップへ ▼▼▼
+    if (BATTLE_STATE.lastResult === 'lose' || BATTLE_STATE.lastResult === 'clear' || STATE.mode === 'practice') {
         GAME.goToTitle();
     } else {
         GAME.goToHangar();
     }
+    // ▲▲▲
   },
 
   runCountdown: (num) => {

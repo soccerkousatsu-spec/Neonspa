@@ -1,0 +1,3957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+<title>NEON SPAGHETTI: ROGUE (Step 3 Integrated)</title>
+<style>
+  /* =========================================
+     BASE & THEME (Step 2 Original)
+     ========================================= */
+  * { box-sizing: border-box; user-select: none; font-family: 'Segoe UI', sans-serif; font-weight: 900; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    margin: 0; background-color: #050510; color: white; 
+    height: 100dvh; 
+    width: 100vw; 
+    overflow: hidden;
+    overscroll-behavior: none;
+    background-image: 
+      linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* UTILS */
+  .hidden { display: none !important; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; z-index: 100; padding: 20px; }
+  .scroll-box { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  
+  /* BUTTONS */
+  button { 
+    background: rgba(0, 20, 40, 0.9); color: #0ff; border: 2px solid #0ff; 
+    padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0,255,255,0.2); transition: 0.2s;
+  }
+  button:hover:not(:disabled) { background: #0ff; color: #000; box-shadow: 0 0 20px #0ff; }
+  button:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; }
+
+  /* --- SHOP/INVENTORY SMALL CARD --- */
+  .item-card {
+    position: relative; width: 70px; height: 90px;
+    border: 2px solid #445; background: #112; border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.1s; margin: 3px; flex-shrink: 0;
+  }
+  .item-card.selected { border-color: #ffd700; box-shadow: 0 0 15px #ffd700; transform: scale(1.05); }
+  .item-card img { width: 50px; height: 50px; object-fit: contain; }
+  .item-card .no-img { width: 40px; height: 40px; background: #334; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #889; }
+  .item-card .name { font-size: 9px; margin-top: 5px; text-align: center; line-height: 1.1; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  
+  /* --- DRAFT DETAIL CARD --- */
+  .draft-card {
+    background: #0b0b15; border: 1px solid #445; border-radius: 8px;
+    padding: 10px; display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;
+    height: 160px;
+  }
+  .draft-card.selected { border-color: #ffd700; background: #1a1a2e; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); transform: scale(1.02); }
+  
+  .draft-card .img-area { width: 50px; height: 50px; margin-bottom: 5px; flex-shrink: 0; }
+  .draft-card img { width: 100%; height: 100%; object-fit: contain; }
+  .draft-card .no-img { width: 100%; height: 100%; background: #223; color: #667; display: flex; align-items: center; justify-content: center; font-size: 10px; border-radius: 4px; }
+  
+  .draft-card .role-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-bottom: 5px; font-weight: bold; background: #223; border: 1px solid #445; }
+  .draft-card .name { font-size: 13px; color: #fff; margin-bottom: 5px; text-align: center; font-weight: bold; }
+  .draft-card .desc { font-size: 10px; color: #889; line-height: 1.3; text-align: center; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* TYPE COLORS */
+  .type-tank { border-color: #0f0; color: #0f0; }
+  .type-atk { border-color: #f05; color: #f05; }
+  .type-supp { border-color: #0ff; color: #0ff; }
+  .type-card { border-color: #fff; color: #fff; }
+  
+  /* === TITLE SCREEN === */
+  #screen-title { 
+    justify-content: center; 
+    gap: 10px; 
+    
+    /* ★修正：要素が増えて画面からはみ出た場合にスクロールできるようにする */
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; /* Safariでのスクロールを滑らかにする */
+  }
+  .title-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .title-box { margin-bottom: 30px; text-align: center; animation: float 3s infinite ease-in-out; }
+  .title-neon { font-size: 60px; color: #0ff; text-shadow: 0 0 20px #0ff; display: block; line-height: 0.9; transform: skew(-5deg); margin-bottom: 5px; }
+  .title-spag { font-size: 40px; color: #f05; text-shadow: 0 0 20px #f05; display: block; line-height: 0.9; transform: skew(-5deg); letter-spacing: 2px; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+  .btn-title { width: 300px; margin: 8px; font-weight: 900; letter-spacing: 4px; }
+  .btn-survival { height: 80px; font-size: 28px; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+  .btn-survival:hover { background: #ffd700; color: #000; box-shadow: 0 0 40px #ffd700; }
+  
+  .practice-menu { 
+    height: 0; 
+    overflow: hidden; 
+    transition: height 0.3s ease-out; 
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    width: 320px; 
+    margin-bottom: 5px; 
+    
+    /* ★修正：画面が狭くなってもこのエリアを自動縮小させない */
+    flex-shrink: 0;
+  }
+  
+  /* ★修正：高さを140pxから160pxに増やして、ボタンが見切れるのを防ぐ */
+  .practice-menu.open { height: 160px; }
+
+  .btn-diff { width: 140px; font-size: 16px; padding: 10px; display: inline-block; margin: 5px; }
+  .btn-easy { border-color: #0f0; color: #0f0; } .btn-easy:hover { background: #0f0; }
+  .btn-normal { border-color: #0ff; color: #0ff; } .btn-normal:hover { background: #0ff; }
+  .btn-hard { border-color: #f05; color: #f05; } .btn-hard:hover { background: #f05; }
+  .btn-omg { border-color: #a0f; color: #a0f; animation: omgPulse 1s infinite alternate; } 
+  .btn-omg:hover { background: #a0f; color: #fff; }
+  @keyframes omgPulse { from { transform: scale(1); } to { transform: scale(1.05); text-shadow: 0 0 10px #a0f; } }
+
+  .footer { 
+    position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; 
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  .btn-ofuse { width: auto; padding: 10px 30px; font-size: 16px; border-color: #ff914d; color: #ff914d; box-shadow: 0 0 10px #ff914d; margin: 0; letter-spacing: 2px; }
+  .btn-ofuse:hover { background: #ff914d; color: #fff; }
+
+  .settings-row { display: flex; gap: 20px; font-size: 12px; color: #889; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 20px; border: 1px solid #334; }
+  input[type=range] { -webkit-appearance: none; width: 100px; background: transparent; cursor: pointer; }
+
+  /* === DRAFT SCREEN === */
+  #screen-draft { 
+    background: rgba(5, 5, 10, 0.98); 
+    overflow-y: auto; -webkit-overflow-scrolling: touch; 
+    justify-content: flex-start; 
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  }
+  .draft-header { text-align: center; margin-bottom: 15px; flex-shrink: 0; }
+
+  /* ▼▼▼ 追加：ドラフトのスロット配置エリア ▼▼▼ */
+  .draft-slots-area {
+    display: flex; justify-content: center; gap: 10px;
+    margin-bottom: 20px; width: 100%; max-width: 800px;
+    flex-shrink: 0;
+  }
+  .d-slot {
+    width: 90px; height: 120px;
+    background: rgba(0,0,0,0.5); border: 2px dashed #445; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; cursor: pointer; transition: 0.2s;
+  }
+  .d-slot:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
+  .d-slot.filled { border-style: solid; border-color: #0ff; background: #001; box-shadow: 0 0 15px rgba(0,255,255,0.2); }
+  
+  .d-slot .label { font-size: 10px; color: #667; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+  .d-slot img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 5px; }
+  .d-slot .name { font-size: 11px; color: #fff; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .d-slot .placeholder { font-size: 20px; color: #334; }
+  .d-slot .remove-hint { position: absolute; top: 2px; right: 4px; color: #f05; font-size: 14px; display: none; }
+  .d-slot.filled:hover .remove-hint { display: block; }
+  /* ▲▲▲ 追加ここまで ▲▲▲ */
+  
+  .draft-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+    gap: 10px; 
+    width: 100%; max-width: 800px; 
+    margin-bottom: 30px; flex-shrink: 0; 
+  }
+
+  .draft-counter { font-size: 14px; color: #889; margin-bottom: 8px; flex-shrink: 0; width: 100%; max-width: 800px; padding-left: 5px; border-left: 3px solid #445; }
+  .draft-counter.ok { color: #0f0; border-color: #0f0; text-shadow: 0 0 5px #0f0; }
+
+  #btn-draft-confirm { 
+    flex-shrink: 0; margin-top: 20px; height: 60px; font-size: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px rgba(0,255,255,0.1); 
+    margin-bottom: 20px;
+  }
+
+  /* === HANGAR SCREEN (Mobile Optimized) === */
+  #screen-hangar { 
+    background: rgba(5, 10, 20, 0.98); 
+    padding: 10px; 
+    display: flex; flex-direction: column; 
+    gap: 10px;
+    height: 100dvh; /* Dynamic Height */
+  }
+  
+  .hangar-top { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; border-bottom: 1px solid #334; padding-bottom: 5px; }
+  .money-disp { font-size: 24px; color: #ffd700; font-family: monospace; }
+  
+  .hangar-tabs { display: flex; gap: 10px; width: 100%; overflow-x: auto; flex-shrink: 0; padding-bottom: 5px; }
+  .tab-btn { flex: 1; padding: 10px 5px; font-size: 12px; border: 1px solid #445; background: #112; color: #889; white-space: nowrap; }
+  .tab-btn.active { border-color: #0ff; color: #0ff; background: #002; }
+
+  .hangar-main { 
+    display: flex; flex-direction: column; 
+    width: 100%; flex: 1; overflow: hidden; 
+  }
+
+  .shop-list { 
+    flex: 1; 
+    display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center;
+    gap: 5px; overflow-y: auto; 
+    padding: 5px; border: 1px dashed #334; background: rgba(0,0,0,0.2);
+    padding-bottom: 20px;
+  }
+
+  .info-panel { 
+    width: 100%; height: 180px; flex-shrink: 0; 
+    background: rgba(0,0,0,0.8); border: 1px solid #445; 
+    padding: 15px; margin-top: 10px;
+    display: flex; flex-direction: column; 
+  }
+  
+  .info-name { font-size: 20px; color: #fff; margin-bottom: 5px; }
+  .info-role { font-size: 12px; color: #889; margin-bottom: 10px; border-bottom: 1px solid #445; padding-bottom: 5px; }
+  .info-desc { font-size: 13px; color: #ccc; line-height: 1.4; flex: 1; overflow-y: auto; margin-bottom: 10px; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; }
+  .info-price { font-size: 24px; color: #ffd700; }
+  
+  .hangar-footer { 
+    width: 100%; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-top: 5px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  #screen-battle { z-index: 50; display: none; } 
+  
+  /* =========================================
+     BATTLE SYSTEM STYLES (v17.5 Integrated)
+     ========================================= */
+  #screen-battle {
+    position: absolute; inset: 0; display: flex; flex-direction: column; 
+    overflow: hidden;
+    padding: 0; /* Reset screen padding */
+  }
+
+  /* FX & ANIMATIONS */
+  .glitch-active { animation: glitchAnim 0.1s steps(2, end); }
+  @keyframes glitchAnim {
+    0% { filter: invert(0); transform: translate(0); }
+    25% { filter: invert(0.8) hue-rotate(90deg); transform: translate(1px, -1px); }
+    50% { filter: sepia(1) hue-rotate(-90deg); transform: translate(-1px, 1px); }
+    75% { filter: invert(0); transform: translate(0); }
+  }
+
+  .omg-win-bg { animation: godRay 3s infinite alternate; }
+  @keyframes godRay {
+    0% { filter: hue-rotate(0deg) contrast(1.2); box-shadow: inset 0 0 50px #ffd700; }
+    100% { filter: hue-rotate(20deg) contrast(1.5); box-shadow: inset 0 0 150px #fff; }
+  }
+
+  #layer-bg { position: absolute; inset: 0; z-index: 0; opacity: 0.5; pointer-events: none; }
+  #layer-lines { position: absolute; inset: 0; z-index: 50; pointer-events: none; }
+  #layer-ui { position: relative; z-index: 100; flex: 1; display: flex; flex-direction: column; width: 100%; height: 100%; }
+  #layer-drag { position: absolute; inset: 0; z-index: 999; pointer-events: none; }
+  
+  #layer-count { 
+    position: absolute; inset: 0; z-index: 2000; pointer-events: none; 
+    display: flex; justify-content: center; align-items: center;
+    font-size: 120px; color: #fff; text-shadow: 0 0 20px #0ff;
+    opacity: 0; transform: scale(0.5);
+  }
+  .count-anim { animation: countPop 0.8s forwards; }
+  @keyframes countPop { 0% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.5); } }
+
+  .hud { 
+    height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; 
+    font-size: 12px; color: #889; letter-spacing: 1px;
+    background: rgba(10, 15, 30, 0.6); backdrop-filter: blur(5px);
+    border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    position: relative; z-index: 1000; width: 100%;
+  }
+  .hud span { color: #0ff; font-size: 16px; text-shadow: 0 0 5px #0ff; margin-left: 8px; }
+
+  #pause-btn {
+    width: 30px; height: 30px; 
+    border: 2px solid #0ff; border-radius: 4px;
+    display: flex; justify-content: center; align-items: center;
+    color: #0ff; font-size: 14px; cursor: pointer;
+    box-shadow: 0 0 5px #0ff; transition: 0.2s;
+    background: rgba(0,0,0,0.5); pointer-events: auto;
+  }
+  #pause-btn:hover { background: #0ff; color: #000; box-shadow: 0 0 15px #0ff; }
+
+  .field { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; width: 100%; position: relative; }
+  
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); place-items: center; height: 100px; width: 100%; }
+  .row.boss { display: flex; justify-content: center; align-items: center; height: 60px; }
+  .row.enemy-row { margin-top: 25px; }
+  .row.mob-line { 
+    display: grid; grid-template-columns: repeat(3, 1fr); place-items: center; height: 120px; width: 100%;
+    margin-top: 15px; 
+    background: none !important; box-shadow: none !important; border: none !important;
+  }
+  .row.ally { margin-top: 25px; }
+
+  .hand { 
+    height: 160px; 
+    display: flex; justify-content: center; align-items: center; gap: 15px; 
+    padding-bottom: 10px; width: 100%;
+    position: relative; z-index: 1000;
+  }
+  .hand::before {
+    content: ''; position: absolute; top: 40px; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 12, 20, 0.85); backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 255, 255, 0.15);
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5); z-index: -1; 
+  }
+
+  @keyframes shake { 0% { transform: translate(0, 0); } 25% { transform: translate(-4px, 4px); } 50% { transform: translate(4px, -4px); } 75% { transform: translate(-4px, -4px); } 100% { transform: translate(0, 0); } }
+  .shaking { animation: shake 0.15s ease-in-out; }
+
+  .box {
+    position: relative; width: 80px; height: 110px; max-width: 90%; max-height: 95%;
+    border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
+    transition: box-shadow 0.1s, transform 0.1s;
+    animation: float 4s infinite ease-in-out;
+    z-index: 10;
+    background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #000; 
+  }
+  .box img { width: 100%; height: 100%; object-fit: contain; position: absolute; inset:0; z-index:-1; opacity: 0.8; }
+  .box.active-flash { background-color: white !important; background-image: none !important; transition: 0s; }
+  .box:nth-child(1) { animation-delay: 0s; } .box:nth-child(2) { animation-delay: 1.5s; } .box:nth-child(3) { animation-delay: 3s; }
+
+  .box.p { border: 2px solid #0ff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); color: #e0ffff; text-shadow: 0 0 5px #000, 0 0 2px #0ff; }
+  .box.e { border: 2px solid #f05; box-shadow: 0 0 15px rgba(255, 0, 85, 0.5); color: #ffe0e0; text-shadow: 0 0 5px #000, 0 0 2px #f05; }
+
+  /* Battle Images (Mapped from JS or Defaults) */
+  #p_tank, #e_tank { background-image: url('char_golden.png'); } /* Fallback */
+  
+  .mob {
+    position: relative; width: 60px; height: 60px; min-width: 60px; min-height: 60px;
+    background-color: transparent; border-radius: 0; border: none; box-shadow: none;
+    display: flex; justify-content: center; align-items: center;
+    flex-shrink: 0; justify-self: center; align-self: center; z-index: 10;
+    transition: transform 0.3s;
+  }
+  .mob::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: url('mob.png'); 
+    background-size: contain; background-position: center; background-repeat: no-repeat;
+    filter: drop-shadow(0 0 5px #0f0); transition: filter 0.3s; z-index: 0;
+  }
+  .mob.elite { transform: scale(1.3); }
+  .mob.elite::before { background-image: url('mob_elite.png'); filter: drop-shadow(0 0 8px #fa0) drop-shadow(0 0 2px #fff); }
+  .mob.buff { transform: scale(1.1); }
+  .mob.buff::before { filter: drop-shadow(0 0 8px #a0f) drop-shadow(0 0 2px #fff); }
+
+  /* ▼▼▼ 修正前 ▼▼▼ */
+  /*
+  .core {
+    width: 60px; height: 60px; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 14px; z-index: 10; flex-shrink: 0; border: 3px solid white;
+    font-weight: 900; text-shadow: 0 0 5px black;
+    background-size: cover; background-position: center;
+  }
+  */
+
+  /* ▼▼▼ 修正後（これを上書きしてください） ▼▼▼ */
+  .core {
+    /* ★追加：これがないとアイコンが画面左上に飛んでしまいます */
+    position: relative; 
+    
+    width: 60px; height: 60px; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 14px; z-index: 10; flex-shrink: 0; border: 3px solid white;
+    font-weight: 900; text-shadow: 0 0 5px black;
+    background-size: cover; background-position: center;
+  }
+  .core.p { border-color: #0ff; box-shadow: 0 0 25px #00f; color: #fff; margin-top: 25px; }
+  .core.e { border-color: #f05; box-shadow: 0 0 25px #f05; color: #fff; }
+
+  .bars { width: 90%; position: absolute; bottom: 6px; display: flex; flex-direction: column; gap: 3px; pointer-events: none; z-index: 35; }
+  .bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.8); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.3); }
+  .fill { height: 100%; width: 100%; transition: width 0.1s linear; }
+  .fill.hp.p { background: #0ff; box-shadow: 0 0 5px #0ff; }
+  .fill.hp.e { background: #f05; box-shadow: 0 0 5px #f05; }
+  .fill.hp.m { background: #0f0; box-shadow: 0 0 5px #0f0; }
+  .fill.xp { background: #fc0; box-shadow: 0 0 5px #fc0; }
+  .badge { position: absolute; top: -8px; right: -8px; background: #000; color: #fff; border: 1px solid #fff; font-size: 10px; padding: 2px 5px; border-radius: 4px; z-index: 35; box-shadow: 0 0 5px black; }
+  .mob .bars { width: 160%; left: -30%; bottom: -12px; gap: 0; z-index: 35; }
+  
+  /* ▼▼▼ インジケーター位置揃え ▼▼▼ */
+  .indicators {
+    position: absolute; top: -14px; left: 0; width: 100%;
+    display: flex; justify-content: flex-start; 
+    align-items: center; /* ★追加：上下中央揃え（四角の位置ズレ防止） */
+    padding-left: 4px;
+    flex-wrap: wrap; gap: 3px; pointer-events: none; z-index: 40;
+  }
+
+  /* ▼▼▼ 共通ドット設定 ▼▼▼ */
+
+  .b-dot.p { color: #00ffff; } /* 味方（水色） */
+  .b-dot.e { color: #ff0055; } /* 敵（赤色） */
+  .b-dot.mob { color: #00ff00; } /* モブ（緑色） */
+
+  .b-dot { 
+    width: 8px; height: 8px; 
+    border: 1px solid #fff; border-radius: 50%; 
+    
+    /* ★修正：transparentではなくcurrentColor（現在の色）で塗りつぶします */
+    background-color: currentColor;
+    
+    box-shadow: 0 0 2px currentColor; 
+    transition: transform 0.2s; 
+    margin: 1px; 
+    position: relative; 
+  }
+
+  /* ▼▼▼ 四角（TANK）：サイズを少し大きく（7.5px） ▼▼▼ */
+  .b-dot.square { 
+    width: 7.5px; height: 7.5px; 
+    border-radius: 0; 
+  }
+  
+  /* ▼▼▼ 菱形（CARD）：サイズを大きく（6.5px） ▼▼▼ */
+  .b-dot.diamond {
+    width: 6.5px; height: 6.5px;
+    border-radius: 0;
+    transform: rotate(45deg);
+    margin: 2px; /* 回転した分、隣と重ならないように隙間調整 */
+  }
+
+/* ▼▼▼ 修正後（これをコピペして置き換える） ▼▼▼ */
+
+/* 1. ベースの白い三角形（borderで作成） */
+.b-dot.tri {
+  width: 0; 
+  height: 0; 
+  
+  /* ★重要：元の四角い枠線をリセット */
+  border: none;
+  background-color: transparent !important;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: none; 
+
+  /* 左右を透明、下を白にすることで三角を作る */
+  border-left: 4.5px solid transparent;
+  border-right: 4.5px solid transparent;
+  border-bottom: 8px solid #fff; 
+  
+  margin: 0 1px;
+  position: relative;
+  
+  /* ぼかしを3pxに。これで色が濃く見えます */
+  filter: drop-shadow(0 0 3px currentColor);
+  
+  transform-origin: center center;
+  transition: transform 0.2s;
+}
+
+/* 2. 内側の色付き三角形 */
+.b-dot.tri::after {
+  content: ''; 
+  position: absolute; 
+  inset: auto; 
+  
+  /* 白枠の内側に配置する調整 */
+  top: 2px; 
+  left: -2.5px; 
+  
+  /* 小さい三角 */
+  width: 0;
+  height: 0;
+  border-left: 2.5px solid transparent;
+  border-right: 2.5px solid transparent;
+  border-bottom: 5px solid currentColor; 
+  
+  background-color: transparent;
+  clip-path: none;
+  transform: none;
+}
+
+/* 3. 三角専用の拡大アニメーション */
+@keyframes urgentPulseTri { 
+  0% { 
+    transform: scale(1); 
+    filter: drop-shadow(0 0 3px currentColor); 
+  } 
+  100% { 
+    transform: scale(1.4); 
+    /* 拡大時は光をさらに強く(8px) */
+    filter: drop-shadow(0 0 8px currentColor); 
+  } 
+}
+
+/* urgentクラスがついた時、三角だけ専用アニメーションを使う */
+.b-dot.tri.urgent { 
+  animation: urgentPulseTri 0.3s infinite alternate;
+  z-index: 50;
+}
+/* ▲▲▲ 修正後ここまで ▲▲▲ */
+
+  /* アニメーション（強調表示） */
+  .b-dot.urgent { transform: scale(1.4); z-index: 50; animation: urgentPulse 0.3s infinite alternate; }
+  .b-dot.diamond.urgent { transform: rotate(45deg) scale(1.4); }
+
+  @keyframes urgentPulse { from { filter: drop-shadow(0 0 2px currentColor); } to { filter: drop-shadow(0 0 8px currentColor); } }
+
+
+  .cd-mask { 
+    position: absolute; inset: 0; background: transparent; backdrop-filter: grayscale(100%); color: white; 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 11px; z-index: 30; border-radius: 8px; pointer-events: none; 
+  }
+  
+  .slot { 
+    width: 70px; height: 95px; 
+    background: rgba(255,255,255,0.05); border: 1px dashed #444; border-radius: 8px; position: relative; display: flex; justify-content: center; align-items: center; 
+  }
+  
+  .card { 
+    width: 100%; height: 100%; 
+    background: linear-gradient(160deg, rgba(20,50,60,0.9), rgba(5,10,20,0.95)); 
+    border: 2px solid #0ff; border-radius: 8px; display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; 
+    color: #0ff; font-size: 12px; 
+    cursor: grab; z-index: 50; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); 
+    text-shadow: 0 0 5px #0ff; letter-spacing: 1px; 
+    
+    /* ▼▼▼ 修正: 文字を中央揃えにする設定を追加し、左右に少し余白を持たせる ▼▼▼ */
+    text-align: center; 
+    padding: 0 2px 20px 2px;
+    /* ▲▲▲ 修正ここまで ▲▲▲ */
+  }
+
+  .card:active { transform: scale(0.95); box-shadow: 0 0 20px rgba(0, 255, 255, 0.6); }
+
+  .enemy-hand-pos { position: absolute; top: 5px; left: 15px; display: flex; gap: 10px; z-index: 10; }
+  .slot.enemy { width: 50px; height: 70px; border-color: #f05; color: #f05; font-size: 10px; box-shadow: 0 0 10px rgba(255, 0, 85, 0.2); background: rgba(20, 0, 10, 0.5); }
+
+  .dead { filter: grayscale(1) brightness(0.3); opacity: 0.6; border-style: dashed !important; box-shadow: none !important; animation: none !important; }
+  .casting { animation: pulse 0.2s infinite alternate !important; border-color: #fa0 !important; box-shadow: 0 0 20px #fa0 !important; color: #fa0 !important; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+  .highlight { transform: scale(1.1); z-index: 200; background: #334; box-shadow: 0 0 30px white !important; border-color: white !important; }
+  .ghost { position: fixed; pointer-events: none; opacity: 0.8; z-index: 1000; transform: scale(1.1); box-shadow: 0 0 30px #0ff; border-radius: 8px; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); color: white; font-size: 12px; }
+  
+  .path-base { fill: none; stroke-width: 4px; stroke-opacity: 0.1; stroke-linecap: round; transition: stroke-opacity 0.2s; }
+  .path-base.boss { stroke-width: 8px; stroke-opacity: 0.4; stroke-dasharray: 8 8; animation: dashMove 1s linear infinite; filter: drop-shadow(0 0 5px currentColor); }
+  .path-gauge { fill: none; stroke-width: 4px; stroke-linecap: round; stroke-dasharray: 8 12; animation: dashMove 0.5s linear infinite; filter: drop-shadow(0 0 3px currentColor); }
+  @keyframes dashMove { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+  .path-gauge.mob { stroke-width: 2px; stroke-dasharray: 4 6; opacity: 0.5; }
+  .path-gauge.boss { stroke-width: 10px; stroke-dasharray: none; opacity: 0.7; filter: blur(2px) drop-shadow(0 0 10px currentColor); }
+  .path-boss-core { fill: none; stroke: #fff; stroke-width: 3px; stroke-linecap: round; stroke-dasharray: none; filter: drop-shadow(0 0 2px #fff); z-index: 60; }
+  .path-gauge.p { stroke: #0ff; } .path-gauge.e { stroke: #f05; } .path-base.p { stroke: #0ff; } .path-base.e { stroke: #f05; }
+  .path-reserve { fill: none; stroke: #0ff; stroke-width: 2px; stroke-dasharray: 6 8; opacity: 0.6; animation: dashMove 1.5s linear infinite; }
+  #drag-line { stroke: white; stroke-width: 3px; stroke-dasharray: 5; display: none; }
+  .flash { stroke-width: 2px; stroke: white; opacity: 1; animation: flashAnim 0.15s forwards; filter: drop-shadow(0 0 5px white); }
+  @keyframes flashAnim { to { stroke-width: 0px; opacity: 0; } }
+
+  .target-frame { position: absolute; pointer-events: none; z-index: 150; width: 60px; height: 60px; opacity: 0.8; animation: framePulse 2s ease-in-out infinite alternate; }
+  @keyframes framePulse { from { transform: scale(1); opacity: 0.6; } to { transform: scale(1.1); opacity: 1; } }
+  .tf-c { position: absolute; width: 10px; height: 10px; border: 2px solid currentColor; }
+  .tf-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+  .tf-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+  .tf-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+  .tf-br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+  .pop { position: fixed; z-index: 2000; pointer-events: none; font-family: 'Segoe UI', sans-serif; font-size: 11px; letter-spacing: 0px; text-shadow: 2px 2px 0 #000, 0 0 8px currentColor; animation: popFly 0.8s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; width: 120px; left: 50%; margin-left: -60px; }
+  .pop.crit { font-size: 18px; letter-spacing: 1px; z-index: 2100; text-shadow: 3px 3px 0 #000, 0 0 20px currentColor; border: none; background: none; animation: popCrit 1.0s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  @keyframes popFly { 0% { opacity: 0; transform: scale(0.5) translate(0, 10px); } 40% { opacity: 1; transform: scale(1.3) translate(var(--rx), -15px); } 100% { opacity: 0; transform: scale(1) translate(var(--rx), -50px); } }
+  @keyframes popCrit { 0% { opacity: 0; transform: scale(0) rotate(-15deg); } 30% { opacity: 1; transform: scale(1.4) rotate(5deg); } 100% { opacity: 0; transform: scale(1) rotate(0deg); } }
+
+  .particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; z-index: 200; box-shadow: 0 0 10px currentColor; animation: particleFly 0.6s forwards ease-out; }
+  @keyframes particleFly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+
+  .fx-cross { position: absolute; top: 50%; left: 50%; width: 120px; height: 120px; transform: translate(-50%, -50%) rotate(45deg); pointer-events: none; z-index: 999; }
+  .fx-cross::before, .fx-cross::after { content: ''; position: absolute; background: #fff; box-shadow: 0 0 10px #0ff, 0 0 20px #fff; }
+  .fx-cross::before { top: 50%; left: 0; width: 100%; height: 4px; animation: crossSlash 0.2s ease-out forwards; }
+  .fx-cross::after { left: 50%; top: 0; width: 4px; height: 100%; animation: crossSlash 0.2s ease-out forwards; }
+  @keyframes crossSlash { 0% { opacity: 0; transform: scale(0); } 30% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1.3); } }
+
+  .fx-white-overlay { position: absolute; inset: 0; background: #fff; border-radius: 8px; pointer-events: none; z-index: 20; mix-blend-mode: overlay; opacity: 0; animation: whiteFlash 0.15s ease-out forwards; }
+  @keyframes whiteFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+  .fx-lvup-overlay { position: absolute; inset: 0; background: #ffd700; border-radius: 8px; pointer-events: none; z-index: 20; mix-blend-mode: overlay; opacity: 0; animation: lvupFlash 0.3s ease-out forwards; }
+  @keyframes lvupFlash { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+  .fx-lvup-ring { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; border: 4px solid #ffd700; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 5; box-shadow: 0 0 20px #ffd700, inset 0 0 10px #ffd700; animation: ringExplodeGold 0.6s ease-out forwards; }
+  @keyframes ringExplodeGold { 0% { width: 10px; height: 10px; opacity: 1; border-width: 8px; } 100% { width: 200px; height: 200px; opacity: 0; border-width: 0px; } }
+
+  .bit { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #fff; z-index: 900; pointer-events: none; box-shadow: 0 0 8px currentColor; transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+  .fx-glitch-target { animation: glitchSkew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite; filter: drop-shadow(2px 0 #f0f) drop-shadow(-2px 0 #0ff) invert(0.2); }
+  @keyframes glitchSkew { 0% { transform: translate(0); } 20% { transform: translate(-3px, 3px); } 40% { transform: translate(-3px, -3px); } 60% { transform: translate(3px, 3px); } 80% { transform: translate(3px, -3px); } 100% { transform: translate(0); } }
+  
+  .fx-thunder { position: absolute; top: -50px; left: 50%; width: 4px; height: 150px; background: #fff; transform: translateX(-50%); z-index: 900; pointer-events: none; box-shadow: 0 0 15px #ff0, 0 0 30px #fa0; animation: thunderFlash 0.2s steps(2) forwards; }
+  @keyframes thunderFlash { 0% { opacity: 1; height: 150px; } 50% { opacity: 0.5; } 100% { opacity: 0; height: 0; } }
+  .fx-spark { position: absolute; top: 50%; left: 50%; width: 2px; height: 40px; background: #ff0; pointer-events: none; z-index: 900; box-shadow: 0 0 10px #ff0; transform-origin: center; animation: sparkZap 0.3s ease-out forwards; }
+  @keyframes sparkZap { 0% { transform: translate(-50%, -50%) rotate(var(--r)) scaleY(0); opacity: 1; } 50% { transform: translate(-50%, -50%) rotate(var(--r)) scaleY(1.5); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(var(--r)) scaleY(2); opacity: 0; } }
+
+  .mob.dead {
+    transform: scale(1) !important; /* エリート等の拡大を解除して標準サイズに戻す */
+    border: 2px dashed #556 !important; /* 点線の枠を明確に出す */
+    background-color: transparent !important;
+  }
+
+  /* UI MODALS */
+  #result-modal { position: fixed; inset: 0; height: 100dvh; background: rgba(0,5,10,0.95); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+
+  .result-title { font-size: 40px; color: #fff; margin-bottom: 20px; letter-spacing: 5px; text-shadow: 0 0 20px currentColor; text-align: center; }
+  .result-sub { font-size: 14px; color: #889; margin-bottom: 40px; letter-spacing: 2px; }
+  .omg-text { color: #ffd700; text-shadow: 0 0 30px #ffd700, 0 0 10px #fff; animation: omgTextPulse 0.5s infinite alternate; font-size: 50px; }
+  @keyframes omgTextPulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 10px #f0f); } }
+
+  /* ▼▼▼ ステータスアイコンの定義 ▼▼▼ */
+  .status-grid {
+    position: absolute; top: 0; left: 0;
+    display: flex; flex-direction: column; gap: 1px;
+    z-index: 60; pointer-events: none;
+    padding: 2px;
+  }
+  .st-icon {
+    width: 14px; height: 14px;
+    font-size: 9px; font-weight: bold; color: #fff;
+    display: flex; justify-content: center; align-items: center;
+    border-radius: 3px;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    text-shadow: 0 0 2px #000;
+    position: relative;
+  }
+  .st-icon span { 
+    position: absolute; right: -4px; bottom: -4px;
+    font-size: 8px; color: #fff; background: #000; 
+    border-radius: 50%; padding: 0 2px; border: 1px solid #fff;
+    transform: scale(0.8);
+  }
+  /* 色分け: RAGE(赤), JUICE(橙), WEAK(紫) */
+  .st-rage { background: #f05; border: 1px solid #ffcccc; }
+  .st-juice { background: #fa0; border: 1px solid #ffeebb; }
+  .st-weak { background: #a0f; border: 1px solid #eeccff; animation: pulseWeak 0.5s infinite alternate; }
+  @keyframes pulseWeak { from{ opacity: 0.8; } to{ opacity: 1; transform: scale(1.1); } }
+
+  /* ▼▼▼ 脳汁演出用CSS ▼▼▼ */
+  
+  /* 1. 全体ホワイトアウト（閃光） */
+  .flash-bang {
+    position: fixed; inset: 0; background: #fff; z-index: 9999;
+    pointer-events: none; opacity: 0; animation: flashBangAnim 1.5s ease-out forwards;
+  }
+  @keyframes flashBangAnim { 0% { opacity: 1; } 10% { opacity: 1; } 100% { opacity: 0; } }
+
+  /* 2. テキストの「叩きつけ」演出 */
+  .slam-anim {
+    animation: slamIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform-origin: center;
+  }
+  @keyframes slamIn {
+    0% { opacity: 0; transform: scale(5) rotate(-10deg); filter: blur(10px); }
+    70% { opacity: 1; transform: scale(0.9) rotate(0deg); filter: blur(0); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+
+  /* 3. 神々しい後光（ゴッドレイ） */
+  .god-rays {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 600px; height: 600px;
+    background: repeating-conic-gradient(rgba(255, 215, 0, 0.1) 0% 5%, transparent 5% 10%);
+    animation: spinRay 10s linear infinite;
+    z-index: -1; pointer-events: none; border-radius: 50%;
+    mask-image: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 70%);
+  }
+  @keyframes spinRay { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* 勝利画面の背景を少し豪華に */
+  #result-modal {
+    background: radial-gradient(circle, rgba(20,0,10,0.9) 0%, rgba(0,0,0,0.98) 100%);
+  }
+
+  /* ▼▼▼ ショップ演出用CSS ▼▼▼ */
+  
+  /* 1. パネルが購入時にピカッと光る */
+  .fx-buy-flash {
+    animation: shopFlash 0.4s ease-out;
+  }
+  @keyframes shopFlash {
+    0% { background-color: #fff; box-shadow: 0 0 50px #fff; border-color: #fff; transform: scale(1.02); }
+    100% { background-color: rgba(0,0,0,0.8); border-color: #445; transform: scale(1); }
+  }
+
+  /* 2. 購入ボタンから飛び散るパーティクル */
+  .shop-particle {
+    position: fixed; width: 6px; height: 6px; border-radius: 50%;
+    pointer-events: none; z-index: 2000;
+    box-shadow: 0 0 10px currentColor;
+    animation: shopPartFly 0.6s forwards ease-out;
+  }
+  @keyframes shopPartFly {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+
+  /* 3. 金額がふわっと浮き出る (-$500) */
+  .shop-float-text {
+    position: fixed; color: #ffd700; font-size: 20px; font-weight: bold;
+    z-index: 2000; pointer-events: none;
+    text-shadow: 0 0 5px #000;
+    animation: shopFloat 1.0s forwards ease-out;
+  }
+  @keyframes shopFloat {
+    0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50px) scale(1.5); opacity: 0; }
+  }
+
+</style>
+</head>
+<body>
+
+<div id="screen-title" class="screen">
+    <div class="title-box">
+      <span class="title-neon">NEON</span>
+      <span class="title-spag">SPAGHETTI</span>
+    </div>
+    
+    <button id="btn-continue" class="btn-title hidden" onclick="GAME.continueGame()" style="border-color:#0f0; color:#0f0; margin-bottom:20px;">
+      CONTINUE
+    </button>
+
+    <button class="btn-title btn-survival" onclick="GAME.startDraft()">SURVIVAL</button>
+
+    <button class="btn-title btn-practice" onclick="UI.togglePractice()">PRACTICE</button>
+    <div id="practice-menu" class="practice-menu">
+      <button class="btn-diff btn-easy" onclick="GAME.startPractice('easy')">EASY</button>
+      <button class="btn-diff btn-normal" onclick="GAME.startPractice('normal')">NORMAL</button>
+      <button class="btn-diff btn-hard" onclick="GAME.startPractice('hard')">HARD</button>
+      <button class="btn-diff btn-omg" onclick="GAME.startPractice('omg')">OMG</button>
+    </div>
+
+    <div class="footer">
+        <div class="settings-row">
+<label>BGM <input type="range" min="0" max="1" step="0.01" value="0.5" oninput="GAME.setVolume('bgm', this.value)"></label>
+<label>SE <input type="range" min="0" max="1" step="0.01" value="0.5" oninput="GAME.setVolume('se', this.value)"></label>
+
+        </div>
+        <button class="btn-ofuse" onclick="window.open('https://ofuse.me/3508f033', '_blank')">💌 SEND OFUSE</button>
+    </div>
+</div>
+
+
+<div id="screen-draft" class="screen hidden">
+  <div class="draft-header">
+    <button onclick="GAME.goToTitle()" style="margin-bottom:10px; border:1px solid #445; background:#112; color:#889; font-size:12px; padding:5px 15px; width:auto;">
+      &lt; QUIT TO TITLE
+    </button>
+    <h2 style="color:#0ff; margin:0;">INITIAL DRAFT</h2>
+    <p style="font-size:12px; color:#889;">スロットをタップして解除、下のリストから追加</p>
+  </div>
+
+  <div class="draft-slots-area">
+    <div class="d-slot" id="d-slot-0" onclick="DRAFT.clickSlot(0)">
+      <div class="label">LEFT</div>
+      <div class="placeholder">+</div>
+    </div>
+    <div class="d-slot" id="d-slot-1" onclick="DRAFT.clickSlot(1)">
+      <div class="label" style="color:#f05;">CENTER</div>
+      <div class="placeholder">+</div>
+    </div>
+    <div class="d-slot" id="d-slot-2" onclick="DRAFT.clickSlot(2)">
+      <div class="label" style="color:#0f0;">RIGHT</div>
+      <div class="placeholder">+</div>
+    </div>
+  </div>
+  <div class="draft-counter" id="draft-unit-count">UNITS: 0 / 3</div>
+  <div class="draft-grid" id="draft-unit-list"></div>
+
+  <div class="draft-counter" id="draft-card-count">CARDS: 0 / 5</div>
+  <div class="draft-grid" id="draft-card-list"></div>
+
+  <button id="btn-draft-confirm" onclick="DRAFT.confirm()" disabled>CONFIRM & START</button>
+</div>
+
+<div id="screen-hangar" class="screen hidden">
+  <div class="hangar-top">
+    <div style="font-size:14px; color:#0ff;">HANGAR <span style="font-size:10px; color:#889;">// STAGE <span id="ui-stage">1</span></span></div>
+    <div class="money-disp">$<span id="ui-money">500</span></div>
+  </div>
+  <div class="hangar-tabs">
+    <button class="tab-btn active" onclick="HANGAR.setTab('all')">ALL</button>
+    <button class="tab-btn" onclick="HANGAR.setTab('unit')">UNITS</button>
+    <button class="tab-btn" onclick="HANGAR.setTab('card')">CARDS</button>
+    <button class="tab-btn" onclick="HANGAR.setTab('upgrade')">UPGRADES</button>
+  </div>
+  <div class="hangar-main">
+    <div class="shop-list scroll-box" id="shop-list"></div>
+    <div class="info-panel">
+      <div id="info-content" style="display:none; height:100%; flex-direction:column;">
+        <div class="info-name" id="info-name">NAME</div>
+        <div class="info-role" id="info-role">ROLE</div>
+        <div class="info-desc" id="info-desc">Description text...</div>
+        <div class="info-row" style="margin-top:auto;">
+          <div class="info-price">$<span id="info-price">0</span></div>
+          <button id="btn-buy" onclick="HANGAR.buy()" style="width:120px;">BUY</button>
+        </div>
+      </div>
+      <div id="info-empty" style="color:#667; text-align:center; margin-top:50px;">SELECT ITEM</div>
+    </div>
+  </div>
+  <div class="hangar-footer">
+<div style="display:flex; gap:10px;">
+  <button onclick="GAME.goToTitle()" style="border-color:#445; color:#889; font-size:12px; width:60px; text-indent: -10px;">QUIT</button>
+  
+  <button id="btn-reroll" onclick="HANGAR.reroll()" style="border-color:#0ff; color:#0ff; font-size:12px; width:80px; text-indent: -10px;">REROLL $100</button>
+</div>
+
+    <button onclick="GAME.startSurvivalBattle()" style="border-color:#f05; color:#f05; width:150px;">>> NEXT BATTLE</button>
+  </div>
+
+</div>
+
+<div id="screen-battle" class="screen hidden">
+  <div id="layer-bg"></div>
+  <svg id="layer-lines" width="100%" height="100%"><line id="drag-line" x1="0" y1="0" x2="0" y2="0" /></svg>
+  <div id="layer-count"></div>
+
+  <div id="layer-ui">
+    <div class="hud">
+     <div id="pause-btn">II</div>
+
+      <div>TIME<span id="ui-timer">300</span></div>
+    </div>
+
+    <div class="field">
+      <div class="enemy-hand-pos">
+        <div class="slot enemy" id="e_slot_0"><div class="cd-mask"></div></div>
+        <div class="slot enemy" id="e_slot_1"><div class="cd-mask"></div></div>
+      </div>
+
+      <div class="row boss">
+        <div class="core e" id="e_boss" data-id="e_boss">100%<div class="indicators" id="ind-e_boss"></div></div>
+      </div>
+
+      <div class="row enemy-row">
+        <div class="box e" id="e_supp" data-id="e_supp"><div class="badge">Lv.1</div><div class="bars"><div class="bar-bg"><div class="fill hp e"></div></div><div class="bar-bg"><div class="fill xp"></div></div></div><div class="cd-mask"></div><div class="indicators" id="ind-e_supp"></div></div>
+        <div class="box e" id="e_atk" data-id="e_atk"><div class="badge">Lv.1</div><div class="bars"><div class="bar-bg"><div class="fill hp e"></div></div><div class="bar-bg"><div class="fill xp"></div></div></div><div class="cd-mask"></div><div class="indicators" id="ind-e_atk"></div></div>
+        <div class="box e" id="e_tank" data-id="e_tank"><div class="badge">Lv.1</div><div class="bars"><div class="bar-bg"><div class="fill hp e"></div></div><div class="bar-bg"><div class="fill xp"></div></div></div><div class="cd-mask"></div><div class="indicators" id="ind-e_tank"></div></div>
+      </div>
+
+      <div class="row mob-line">
+        <div class="mob" id="mob_0" data-id="mob_0"><div class="cd-mask"></div><div class="bars"><div class="bar-bg"><div class="fill hp m"></div></div></div><div class="indicators" id="ind-mob_0"></div></div>
+        <div class="mob" id="mob_1" data-id="mob_1"><div class="cd-mask"></div><div class="bars"><div class="bar-bg"><div class="fill hp m"></div></div></div><div class="indicators" id="ind-mob_1"></div></div>
+        <div class="mob" id="mob_2" data-id="mob_2"><div class="cd-mask"></div><div class="bars"><div class="bar-bg"><div class="fill hp m"></div></div></div><div class="indicators" id="ind-mob_2"></div></div>
+      </div>
+
+      <div class="row ally">
+        <div class="box p" id="p_supp" data-id="p_supp"><div class="badge">Lv.1</div><div class="bars"><div class="bar-bg"><div class="fill hp p"></div></div><div class="bar-bg"><div class="fill xp"></div></div></div><div class="cd-mask"></div><div class="indicators" id="ind-p_supp"></div></div>
+        <div class="box p" id="p_atk" data-id="p_atk"><div class="badge">Lv.1</div><div class="bars"><div class="bar-bg"><div class="fill hp p"></div></div><div class="bar-bg"><div class="fill xp"></div></div></div><div class="cd-mask"></div><div class="indicators" id="ind-p_atk"></div></div>
+        <div class="box p" id="p_tank" data-id="p_tank"><div class="badge">Lv.1</div><div class="bars"><div class="bar-bg"><div class="fill hp p"></div></div><div class="bar-bg"><div class="fill xp"></div></div></div><div class="cd-mask"></div><div class="indicators" id="ind-p_tank"></div></div>
+      </div>
+
+      <div class="row boss">
+        <div class="core p" id="p_boss" data-id="p_boss">100%<div class="indicators" id="ind-p_boss"></div></div>
+      </div>
+    </div>
+
+    <div class="hand">
+      <div class="slot" id="slot-0"><div class="cd-mask"></div></div>
+      <div class="slot" id="slot-1"><div class="cd-mask"></div></div>
+    </div>
+  </div>
+  <div id="layer-drag"></div>
+</div>
+
+<div id="result-modal">
+    <div id="res-title" class="result-title">VICTORY</div>
+
+    <div id="res-sub" class="result-sub">STAGE CLEARED</div>
+    <button onclick="BATTLE.endBattle()">NEXT</button>
+</div>
+
+<div id="pause-modal" class="hidden" style="position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.8); backdrop-filter:blur(5px); display:flex; flex-direction:column; justify-content:center; align-items:center;">
+  <h2 style="color:#0ff; font-size:40px; text-shadow:0 0 10px #0ff; margin-bottom:40px;">PAUSED</h2>
+  <button onclick="BATTLE.resume()" style="width:200px; margin-bottom:20px; font-size:20px;">RESUME</button>
+  <button onclick="BATTLE.quitBattle()" style="width:200px; border-color:#f05; color:#f05; font-size:20px;">QUIT</button>
+</div>
+
+<div id="modal-scout" class="hidden" style="position:fixed; inset:0; z-index:2500; background:rgba(0,5,10,0.95); flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+  <h2 style="color:#f05; font-size:30px; margin-bottom:10px; text-shadow:0 0 10px #f05;">ENEMY SCOUT</h2>
+  <div style="color:#889; font-size:12px; margin-bottom:30px;">WARNING: HIGH THREAT DETECTED</div>
+
+  <div style="display:flex; gap:20px; margin-bottom:20px;">
+    <div class="d-slot filled" id="scout-u-0" style="border-color:#f05; pointer-events:none;">
+       <div class="label" style="color:#f05;">SUPP</div>
+       <img src="" style="width:60px; height:60px; object-fit:contain;">
+       <div class="name" style="font-size:10px;"></div>
+    </div>
+    <div class="d-slot filled" id="scout-u-1" style="border-color:#f05; pointer-events:none;">
+       <div class="label" style="color:#f05;">ATK</div>
+       <img src="" style="width:60px; height:60px; object-fit:contain;">
+       <div class="name" style="font-size:10px;"></div>
+    </div>
+    <div class="d-slot filled" id="scout-u-2" style="border-color:#f05; pointer-events:none;">
+       <div class="label" style="color:#f05;">TANK</div>
+       <img src="" style="width:60px; height:60px; object-fit:contain;">
+       <div class="name" style="font-size:10px;"></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:5px; color:#fff; font-size:14px;">ENEMY DECK</div>
+  <div id="scout-deck-list" style="display:flex; gap:5px; margin-bottom:15px;"></div>
+
+  <div style="width:90%; max-width:400px; margin-bottom:30px;">
+      <div style="color:#f05; font-size:12px; margin-bottom:5px; border-bottom:1px solid #f05;">DETECTED LOGS</div>
+      <div id="scout-log" style="
+          width:100%; height:100px; 
+          background:rgba(0,0,0,0.5); border:1px solid #334; 
+          padding:10px; overflow-y:auto; 
+          font-family:monospace; font-size:11px; color:#ffcccc;
+          display:flex; flex-direction:column; gap:4px;
+      ">
+          </div>
+  </div>
+
+  <div style="display:flex; gap:20px;">
+    <button onclick="document.getElementById('modal-scout').classList.add('hidden');" style="border-color:#889; color:#889; width:120px;">BACK</button>
+    <button onclick="GAME.confirmStartBattle()" style="border-color:#f05; color:#f05; width:160px; box-shadow:0 0 20px #f05;">BATTLE START</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+//  DATABASE (修正版)
+// ============================================
+
+const DB = {
+  units: [
+    { id: 'taki', name: 'Taki', role: 'ATK', price: 400, img: 'char_taki.png', hp: 250, atk: 55, spd: 4.0, desc: '[モブ特攻] モブへのダメージが2倍になる。' },
+    
+    // ▼▼▼ Pizza time: spd 1.5 -> 1.0 ▼▼▼
+    { id: 'pizza', name: 'Pizza time', role: 'ATK', price: 500, img: 'char_pizza.png', hp: 150, atk: 10, spd: 1.0, desc: '[速攻] 予備動作1秒、CD2秒で高速攻撃する。' },
+    
+    // ▼▼▼ However: atk 40 -> 35 ▼▼▼
+    { id: 'however', name: 'However', role: 'ATK', price: 700, img: 'char_however.png', hp: 300, atk: 35, spd: 6.0, desc: '[全体] ターゲットと同じ種類の敵全員を攻撃する。' },
+    
+    { id: 'thislove', name: 'This love', role: 'SUPP', price: 400, img: 'char_thislove.png', hp: 200, atk: 40, spd: 3.0, desc: '[スタン] 詠唱中の敵を攻撃するとスタンさせる。' },
+// DB.units 内
+{ id: 'pop', name: 'PoP', role: 'SUPP', price: 600, img: 'char_pop.png', hp: 250, atk: 20, spd: 3.0, desc: '[弱体化] 敵に被ダメ1.5倍デバフを与える(最大2累積)。' },
+
+    { id: 'cheer', name: 'Cheerleeder', role: 'SUPP', price: 600, img: 'char_cheer.png', hp: 180, atk: 40, spd: 2.0, desc: '[遅延] CD中の敵を攻撃すると、時間を巻き戻す。' },
+    { id: 'golden', name: 'Golden', role: 'TANK', price: 400, img: 'char_golden.png', hp: 500, atk: 50, spd: 4.0, desc: '[守護] 味方を指定すると、ダメージ無効バリアを張る。' },
+    
+    // ▼▼▼ Old town road: spd 5.0 -> 4.0 ▼▼▼
+    { id: 'oldtown', name: 'Old town road', role: 'TANK', price: 400, img: 'char_oldtown.png', hp: 500, atk: 50, spd: 4.0, desc: '[回復] レベルに応じて回復量が増加する。' },
+    
+    { id: 'wata', name: 'WATA', role: 'TANK', price: 600, img: 'char_wata.png', hp: 450, atk: 40, spd: 4.0, desc: '[教育] レベルに応じて経験値を与える。' },
+  ],
+
+
+  // ▼▼▼ cardsをここからコピーして上書きしてください ▼▼▼
+  cards: [
+    // vals配列と、初期状態のdescを定義
+    { id: 'lstun', name: 'LIL STUN', type: 'JAM',  price: 300, level: 1, maxLevel: 3, vals: [2.0, 3.0, 4.0], desc: '[妨害] 詠唱中の敵1体を【2秒間スタン】させる。' },
+    { id: 'rage',  name: 'RAGE',     type: 'BUFF', price: 400, level: 1, maxLevel: 3, vals: [1.3, 1.5, 1.7], desc: '[強化] 味方1体の攻撃力を一定時間【1.3倍】にする。' },
+    { id: 'juice', name: 'JUICE',    type: 'BUFF', price: 400, level: 1, maxLevel: 3, vals: [1.3, 1.5, 1.7], desc: '[加速] 味方1体の詠唱・CD速度を【1.3倍】にする。' },
+    { id: 'bom',   name: 'BOM',      type: 'ATK',  price: 500, level: 1, maxLevel: 3, vals: [30, 60, 90], desc: '[爆撃] 敵味方・モブ問わず画面全体に【30ダメ】。' },
+    { id: 'grow',  name: 'GROW',     type: 'BUFF', price: 300, level: 1, maxLevel: 3, vals: [15, 25, 40],    desc: '[育成] 味方1体に【経験値 15】を直接与える。' },
+    
+    // 以下はMaxLevel 1 (valsなし)
+    { id: 'feed',   name: 'FEED',   type: 'SPEC', price: 300, level: 1, maxLevel: 1, desc: '[給餌] 敵モブ1体を【回復】させ、敵のLv上げを妨害。' },
+    { id: 'heal',   name: 'HEAL',   type: 'DEF',  price: 200, level: 1, maxLevel: 1, desc: '[回復] 味方1体のHPを回復する。' },
+    { id: 'shld', name: 'SHIELD', type: 'DEF',  price: 300, level: 1, maxLevel: 1, desc: '[防壁] 味方1体に5秒間【無敵シールド】を付与。' },
+    { id: 'quick',  name: 'QUICK',  type: 'BUFF', price: 300, level: 1, maxLevel: 1, desc: '[充填] 味方1体のクールダウンを【即座に解消】する。' }
+  ],
+  // ▲▲▲ 上書きここまで ▲▲▲
+
+  upgrades: [
+    // ... (アップグレード定義は変更なし) ...
+    { id: 'u_laser2', name: 'TARGET_UNLOCK', price: 800, desc: 'コアの迎撃レーザーが、モブだけでなく【敵キャラ】も狙う。' },
+    { id: 'u_hp', name: 'HP_PATCH_v1.0', price: 500, desc: '味方全員の最大HPが【10% 増加】する。' },
+    { id: 'u_quick', name: 'QUICK_LOADER', price: 600, desc: 'アクションカードのリロード時間が【20% 短縮】される。' },
+    { id: 'u_laser_spd', name: 'LASER_OVERCLOCK', price: 500, desc: 'コアから出るレーザーの発射間隔が速くなる。' },
+    { id: 'u_xp', name: 'DATA_HARVEST', price: 600, desc: '敵を倒した時の獲得経験値(XP)が増加する。' },
+    { id: 'u_cd', name: 'LATENCY_FIX', price: 700, desc: '味方全員のCDが【10% 短縮】される。' },
+    { id: 'u_heal_laser', name: 'REPAIR_PROTOCOL', price: 800, desc: 'コアが迎撃以外に、【味方を回復するレーザー】も撃つ。' },
+    { id: 'u_share_xp', name: 'CLOUD_SYNC', price: 600, desc: 'モブ撃破時、トドメ以外の味方にも経験値が入る。' },
+    { id: 'u_money', name: 'BIT_MINER', price: 500, desc: '勝利時に貰えるクレジット($)が増加する。' },
+    { id: 'u_atk', name: 'OVERCLOCK_FAN', price: 600, desc: 'Atkの攻撃速度が20%アップする。' },
+    { id: 'u_discount', name: 'DISCOUNT_KEY', price: 1000, desc: 'ショップの全商品が20% OFFになる。' }
+  ]
+};
+
+// ============================================
+//  GAME STATE & CONTROLLERS
+// ============================================
+
+const STATE = {
+  mode: null, stage: 1, money: 0,
+  inventory: { units: [], cards: [], upgrades: [] },
+  deck: { units: [], cards: [] },
+  shopItems: [] // ★追加：現在のショップの商品リスト
+};
+
+const GAME = {
+  // 初期化（ロード時に呼ばれる）
+  init: () => {
+    document.querySelectorAll('.target-frame').forEach(el => el.remove());
+    
+    // セーブデータをロードしてみる
+    if (SAVE.load()) {
+        // データがある場合 → タイトル画面でCONTINUEボタンを表示する（隠蔽クラスを外す）
+        document.getElementById('btn-continue').classList.remove('hidden');
+    }
+    
+    // ★どちらの場合も、必ずタイトル画面を表示する
+    UI.showScreen('screen-title');
+  },
+
+  // 続きから始める（ボタンを押した時の処理）
+  continueGame: () => {
+      UI.showScreen('screen-hangar');
+      HANGAR.updateUI();
+  },
+
+  // 音量設定
+  setVolume: (type, val) => {
+    if (type === 'bgm') {
+      CONFIG.bgmVolume = parseFloat(val);
+      SOUND.updateBGMVolume(CONFIG.bgmVolume);
+    }
+    if (type === 'se') CONFIG.seVolume = parseFloat(val);
+  },
+
+  // タイトル画面へ戻る
+  goToTitle: () => {
+    SOUND.stopBGM();
+    UI.showScreen('screen-title');
+    
+    // タイトルに戻った時も、セーブデータがあるかチェックしてボタンを出す
+    if (SAVE.load()) {
+        document.getElementById('btn-continue').classList.remove('hidden');
+    } else {
+        document.getElementById('btn-continue').classList.add('hidden');
+    }
+  },
+
+  // サバイバルモード（ドラフト）開始
+  startDraft: () => {
+    // 新しく始めるので、古いデータがあれば確実に消す
+    SAVE.clear();
+    // CONTINUEボタンを隠す
+    document.getElementById('btn-continue').classList.add('hidden');
+
+    // ▼▼▼ 追加：DBの汚染をリセット（前のゲームのレベルを引き継がないようにする） ▼▼▼
+    DB.units.forEach(u => {
+        u.level = 1;
+    });
+    
+    DB.cards.forEach(c => {
+        c.level = 1;
+    });
+    // ▲▲▲ 追加ここまで ▲▲▲
+
+    STATE.mode = 'survival';
+    STATE.money = 500;
+    STATE.stage = 1;
+    STATE.inventory = { units: [], cards: [], upgrades: [] };
+    STATE.deck = { units: [], cards: [] };
+    
+    UI.showScreen('screen-draft');
+    DRAFT.init();
+  },
+
+
+  // 練習モード開始
+  startPractice: (diff) => {
+    STATE.mode = 'practice';
+    
+    // 左: This Love, 中: Taki, 右: Golden
+    STATE.inventory.units = ['thislove', 'taki', 'golden'];
+    
+    // カード固定
+    STATE.deck.cards = ['heal', 'quick', 'grow', 'shield', 'feed'];
+    
+    BATTLE.start(diff);
+  },
+
+
+  // ハンガー画面（ショップ）へ移動
+  goToHangar: () => {
+    STATE.mode = 'survival';
+    UI.showScreen('screen-hangar');
+    if (STATE.money === 0 && STATE.stage === 1) STATE.money = 500; 
+    
+    if (!STATE.shopItems || STATE.shopItems.length === 0) {
+        HANGAR.generateShop();
+    }
+    
+    // オートセーブ
+    SAVE.save();
+
+    HANGAR.updateUI();
+  },
+
+  // ★ここに次回マッチ情報を保存する変数を追加
+  nextMatch: null,
+
+  // バトル開始（スカウト画面表示 & 敵の買い物シミュレーション）
+  startSurvivalBattle: () => { 
+      // 1. 敵の構成を生成
+      const roles = ['supp', 'atk', 'tank'];
+      const enemyUnits = [];
+      roles.forEach(role => {
+          let candidates = DB.units.filter(u => u.role === role.toUpperCase());
+          const unit = candidates[Math.floor(Math.random() * candidates.length)] || DB.units[0];
+          enemyUnits.push({ ...unit, level: 1 }); 
+      });
+
+      // 2. 敵のデッキを生成
+      const enemyDeck = [];
+      const pool = [...Object.values(CARD_MAP)]; 
+      for (let i = 0; i < 5; i++) {
+          if (pool.length === 0) break; 
+          const randIdx = Math.floor(Math.random() * pool.length);
+          enemyDeck.push(pool[randIdx].id);
+          pool.splice(randIdx, 1);
+      }
+
+      // 3. ▼▼▼ 敵の買い物シミュレーション ▼▼▼
+      let budget = (STATE.stage - 1) * 600;
+      if (STATE.stage > 1) budget += 200;
+
+      const enemyUpgrades = [];
+      const enemyCardLevels = {};
+      enemyDeck.forEach(id => enemyCardLevels[id] = 1);
+      
+      const logs = [];
+      const shopOptions = ['unit', 'card', 'passive'];
+      
+      // ★追加：ユニットの最大レベル定義
+      const MAX_UNIT_LV = 10; 
+      
+      while (budget >= 300) {
+        const choice = shopOptions[Math.floor(Math.random() * shopOptions.length)];
+        
+        if (choice === 'unit') {
+            // ■ ユニット強化
+            const targetUnit = enemyUnits[Math.floor(Math.random() * enemyUnits.length)];
+            
+            let cost = 400;
+            if (targetUnit.role === 'ATK') cost = 800; 
+
+            // ▼▼▼ 修正：予算チェックに加え、レベル上限(10)チェックを追加 ▼▼▼
+            if (budget >= cost && targetUnit.level < MAX_UNIT_LV) {
+                targetUnit.level++;
+                budget -= cost;
+                logs.push(`> ユニット強化: ${targetUnit.name} (Lv.${targetUnit.level})`);
+            } else {
+                budget -= 100; // 買えない/カンストなら予算を少し減らして次へ
+            }
+            // ▲▲▲
+        }
+        else if (choice === 'card') {
+            // ■ カード強化
+            const cardId = enemyDeck[Math.floor(Math.random() * enemyDeck.length)];
+            
+            // ▼▼▼ 修正：カードごとの正しい最大レベルを取得して判定 ▼▼▼
+            const cDef = DB.cards.find(c => c.id === cardId);
+            const limit = cDef ? cDef.maxLevel : 1; // データがない場合は1とみなす
+
+            if (enemyCardLevels[cardId] < limit) {
+                enemyCardLevels[cardId]++;
+                budget -= 400;
+                const cName = CARD_MAP[cardId] ? CARD_MAP[cardId].name : cardId;
+                logs.push(`> カードLv上昇: ${cName} -> Lv.${enemyCardLevels[cardId]}`);
+            } else {
+                budget -= 100;
+            }
+            // ▲▲▲
+        }
+        else if (choice === 'passive') {
+            // ■ パッシブ強化
+            const pPool = ['u_hp', 'u_atk', 'u_cd', 'u_laser_spd'];
+            const pick = pPool[Math.floor(Math.random() * pPool.length)];
+            
+            if (!enemyUpgrades.includes(pick)) {
+                enemyUpgrades.push(pick);
+                budget -= 500;
+                
+                let pName = pick;
+                if(pick==='u_hp') pName = "HP増強パッチ";
+                if(pick==='u_atk') pName = "攻撃リミッター解除";
+                if(pick==='u_cd') pName = "動作レイテンシ改善";
+                if(pick==='u_laser_spd') pName = "迎撃レーザー高速化";
+                
+                logs.push(`> システムインストール: [${pName}]`);
+            } else {
+                budget -= 100;
+            }
+        }
+      }
+
+      if (logs.length === 0) {
+          logs.push("> 強化シグナルなし");
+          logs.push("> 敵は初期構成のままです");
+      }
+
+      // 4. 結果を保存
+      GAME.nextMatch = {
+          units: enemyUnits,
+          deck: enemyDeck,
+          cardLevels: enemyCardLevels,
+          upgrades: enemyUpgrades
+      };
+
+      // 5. スカウト画面描画
+      const modal = document.getElementById('modal-scout');
+      
+      enemyUnits.forEach((u, i) => {
+          const slot = document.getElementById(`scout-u-${i}`);
+          if(slot) {
+            slot.querySelector('img').src = u.img;
+            slot.querySelector('.name').innerHTML = `<span style="color:#fff;">Lv.${u.level}</span> ${u.name}`; 
+          }
+      });
+
+      const dList = document.getElementById('scout-deck-list');
+      dList.innerHTML = '';
+      enemyDeck.forEach(cid => {
+          const cDef = CARD_MAP[cid]; 
+          const d = document.createElement('div');
+          d.style.cssText = "width:50px; height:70px; border:1px solid #f05; background:#201; display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:10px; color:#f05; text-align:center;";
+          d.innerText = cDef ? cDef.name : cid;
+          
+          if (enemyCardLevels[cid] > 1) {
+              d.innerHTML += `<br><span style="color:#fff; font-weight:bold;">Lv.${enemyCardLevels[cid]}</span>`;
+              d.style.boxShadow = "0 0 10px #f05"; 
+          }
+          dList.appendChild(d);
+      });
+
+      const logBox = document.getElementById('scout-log');
+      logBox.innerHTML = logs.join('<br>');
+      logBox.scrollTop = logBox.scrollHeight;
+
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+  },
+
+
+  // ★追加：スカウト画面から「BATTLE START」を押した時の処理
+  confirmStartBattle: () => {
+      document.getElementById('modal-scout').classList.add('hidden');
+      document.getElementById('modal-scout').style.display = 'none';
+      
+      STATE.shopItems = []; 
+      BATTLE.start('omg'); // ここで戦闘開始
+  }
+};
+
+const UI = {
+  showScreen: (id) => {
+    document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+  },
+  togglePractice: () => {
+    document.getElementById('practice-menu').classList.toggle('open');
+  },
+  // Shop Card (Small)
+  createItemCard: (data, type) => {
+    const el = document.createElement('div');
+    el.className = `item-card type-${type === 'unit' && data.role ? data.role.toLowerCase() : type}`;
+
+    // ▼▼▼ 追加：カードの場合はバトル用の見た目にする ▼▼▼
+    if (type === 'card') {
+        // ショップアイテムとしての枠線や背景を透明にする
+        el.style.borderColor = 'transparent'; 
+        el.style.backgroundColor = 'transparent';
+
+        // ★★★ 追加：ここでサイズを一回り大きくする ★★★
+        // (元のサイズは CSSで width:70px, height:90px です)
+        el.style.width = '71px';   
+        el.style.height = '95px'; 
+
+        // バトルカードの中身を作る
+        const cardInner = document.createElement('div');
+        cardInner.className = 'card'; 
+        cardInner.innerText = data.name;
+        
+        // 色判定
+        const isRed = (data.type === 'ATK' || data.type === 'atk');
+        const color = isRed ? '#f05' : '#0ff';
+
+        // スタイル適用
+        cardInner.style.borderColor = color;
+        cardInner.style.color = color;
+        
+        cardInner.style.fontSize = '12px'; 
+        
+        cardInner.style.textShadow = `0 0 5px ${color}`;
+        
+        el.style.padding = '2px';
+        
+            // ... (さっき追加したカードの処理) ...
+        el.appendChild(cardInner);
+        return el; 
+    }
+    // ▲▲▲ カード追加ここまで ▲▲▲
+
+    // ▼▼▼ 追加：アップグレードなら「緑色のチップ」にする ▼▼▼
+    else if (type === 'upgrade') {
+        el.style.borderColor = 'transparent';
+        el.style.backgroundColor = 'transparent';
+
+        // チップの見た目を作る
+        const chip = document.createElement('div');
+        chip.style.width = '100%';
+        chip.style.height = '100%';
+        chip.style.border = '2px solid #0f0'; // 緑色の枠
+        chip.style.borderRadius = '6px';
+        chip.style.backgroundColor = '#001';
+        chip.style.display = 'flex';
+        chip.style.flexDirection = 'column';
+        chip.style.justifyContent = 'center';
+        chip.style.alignItems = 'center';
+        chip.style.color = '#0f0';
+        chip.style.boxShadow = '0 0 8px rgba(0, 255, 0, 0.4)';
+        chip.style.textShadow = '0 0 2px #0f0';
+        chip.style.padding = '4px';
+
+        // 中央のアイコン文字をIDから判定
+        let iconTxt = "SYS";
+        if (data.id.includes('hp')) iconTxt = "HP";
+        if (data.id.includes('atk')) iconTxt = "ATK";
+        if (data.id.includes('laser')) iconTxt = "LASER";
+        if (data.id.includes('money')) iconTxt = "$$$";
+        if (data.id.includes('cd') || data.id.includes('quick')) iconTxt = "SPD";
+        if (data.id.includes('xp')) iconTxt = "XP";
+
+        // アイコン表示
+        const icon = document.createElement('div');
+        icon.innerText = `[ ${iconTxt} ]`;
+        icon.style.fontSize = '10px';
+        icon.style.marginBottom = '5px';
+        icon.style.fontWeight = 'bold';
+        chip.appendChild(icon);
+
+        // アイテム名表示
+        const name = document.createElement('div');
+        name.innerText = data.name.replace(/_/g, ' '); // アンダースコアをスペースに
+        name.style.fontSize = '9px';
+        name.style.textAlign = 'center';
+        name.style.lineHeight = '1.1';
+        chip.appendChild(name);
+
+        el.appendChild(chip);
+        return el;
+    }
+    // ▲▲▲ 追加ここまで ▲▲▲
+
+    if (data.img) {
+
+      const img = document.createElement('img'); img.src = data.img;
+      img.onerror = function() { this.style.display='none'; this.parentNode.querySelector('.no-img').style.display='flex'; };
+      el.appendChild(img);
+      const fb = document.createElement('div'); fb.className = 'no-img'; fb.style.display='none'; fb.innerText = "NO IMG"; el.appendChild(fb);
+    } else {
+      const box = document.createElement('div'); box.className = 'no-img'; box.style.display='flex'; box.innerText = type === 'card' ? data.type : "ITEM"; el.appendChild(box);
+    }
+    const name = document.createElement('div'); name.className = 'name'; name.innerText = data.name; el.appendChild(name);
+    return el;
+  },
+  // Draft Detail Card (Large)
+  createDraftCard: (data, type) => {
+    const el = document.createElement('div');
+    // ...（クラス設定などはそのまま）...
+    el.className = `draft-card type-${type === 'unit' && data.role ? data.role.toLowerCase() : type}`;
+    
+    // Image Area
+    const imgArea = document.createElement('div'); imgArea.className = 'img-area';
+    
+    // ▼▼▼ 修正：カードならバトル用デザインを表示、それ以外(ユニット)なら画像を表示 ▼▼▼
+    if (type === 'card') {
+        const cardInner = document.createElement('div');
+        cardInner.className = 'card'; // バトル用のCSSクラス
+        cardInner.innerText = data.name;
+        
+        // カードの色判定
+        const isRed = (data.type === 'ATK' || data.type === 'atk');
+        const color = isRed ? '#f05' : '#0ff';
+
+        // 見た目の調整（小さい枠に収める）
+        cardInner.style.width = '100%';
+        cardInner.style.height = '100%';
+        cardInner.style.borderColor = color;
+        cardInner.style.color = color;
+        cardInner.style.fontSize = '8px'; // 文字は小さく
+        cardInner.style.textShadow = `0 0 4px ${color}`;
+        cardInner.style.display = 'flex';
+        cardInner.style.justifyContent = 'center';
+        cardInner.style.alignItems = 'center';
+        cardInner.style.textAlign = 'center';
+        
+        imgArea.appendChild(cardInner);
+    } 
+    else if (data.img) {
+      // ユニット画像がある場合（元のコード）
+      const img = document.createElement('img'); img.src = data.img;
+      img.onerror = function() { this.style.display='none'; this.parentNode.querySelector('.no-img').style.display='flex'; };
+      imgArea.appendChild(img);
+      const fb = document.createElement('div'); fb.className = 'no-img'; fb.style.display='none'; fb.innerText = "NO IMG"; imgArea.appendChild(fb);
+    } else {
+      // 画像がない場合（元のコード）
+      const box = document.createElement('div'); box.className = 'no-img'; box.innerText = "ITEM"; imgArea.appendChild(box);
+    }
+    // ▲▲▲ 修正ここまで ▲▲▲
+
+    el.appendChild(imgArea);
+
+    // ...（以下の role-badge や name の処理はそのまま）...
+
+    // Role Badge
+    const role = document.createElement('div'); 
+    role.className = `role-badge type-${type === 'unit' ? data.role.toLowerCase() : type}`;
+    role.innerText = type === 'unit' ? data.role : data.type;
+    el.appendChild(role);
+
+    // Name & Desc
+    const name = document.createElement('div'); name.className = 'name'; name.innerText = data.name; el.appendChild(name);
+    const desc = document.createElement('div'); desc.className = 'desc'; desc.innerText = data.desc; el.appendChild(desc);
+    
+    return el;
+  }
+};
+
+const DRAFT = {
+  // スロット管理 (0:Left, 1:Center, 2:Right)
+  unitSlots: [null, null, null], 
+  selectedCards: new Set(),
+
+  init: () => {
+    DRAFT.unitSlots = [null, null, null];
+    DRAFT.selectedCards.clear();
+    DRAFT.renderLists();
+    DRAFT.updateUI();
+  },
+
+  renderLists: () => {
+    const uList = document.getElementById('draft-unit-list'); uList.innerHTML = '';
+    DB.units.forEach(u => {
+      const el = UI.createDraftCard(u, 'unit');
+      el.onclick = () => DRAFT.toggleUnit(u.id);
+      el.id = `draft-u-${u.id}`;
+      uList.appendChild(el);
+    });
+
+    const cList = document.getElementById('draft-card-list'); cList.innerHTML = '';
+    DB.cards.forEach(c => {
+      const el = UI.createDraftCard(c, 'card');
+      el.onclick = () => DRAFT.toggleCard(c.id);
+      el.id = `draft-c-${c.id}`;
+      cList.appendChild(el);
+    });
+  },
+
+  toggleUnit: (id) => {
+    const existingIdx = DRAFT.unitSlots.indexOf(id);
+    if (existingIdx !== -1) {
+        DRAFT.unitSlots[existingIdx] = null;
+    } else {
+        const emptyIdx = DRAFT.unitSlots.indexOf(null);
+        if (emptyIdx !== -1) {
+            DRAFT.unitSlots[emptyIdx] = id;
+            SOUND.play('select');
+        }
+    }
+    DRAFT.updateUI();
+  },
+
+  clickSlot: (idx) => {
+      if (DRAFT.unitSlots[idx]) {
+          DRAFT.unitSlots[idx] = null;
+          DRAFT.updateUI();
+          SOUND.play('cancel');
+      }
+  },
+
+  toggleCard: (id) => {
+    if (DRAFT.selectedCards.has(id)) DRAFT.selectedCards.delete(id);
+    else if (DRAFT.selectedCards.size < 5) DRAFT.selectedCards.add(id);
+    DRAFT.updateUI();
+  },
+
+  updateUI: () => {
+    // 1. ユニットリスト選択状態
+    const unitList = document.getElementById('draft-unit-list');
+    if (unitList) {
+        unitList.querySelectorAll('.draft-card').forEach(el => el.classList.remove('selected'));
+    }
+    DRAFT.unitSlots.forEach(id => {
+        if(id) document.getElementById(`draft-u-${id}`)?.classList.add('selected');
+    });
+
+    // 2. カードリスト選択状態
+    const cardList = document.getElementById('draft-card-list');
+    if (cardList) {
+        cardList.querySelectorAll('.draft-card').forEach(el => el.classList.remove('selected'));
+    }
+    DRAFT.selectedCards.forEach(id => document.getElementById(`draft-c-${id}`)?.classList.add('selected'));
+    
+    // 3. スロット描画
+    [0, 1, 2].forEach(idx => {
+        const slotEl = document.getElementById(`d-slot-${idx}`);
+        const uid = DRAFT.unitSlots[idx];
+        const label = slotEl.querySelector('.label');
+        slotEl.innerHTML = ''; 
+        slotEl.appendChild(label);
+
+        if (uid) {
+            const uData = DB.units.find(u => u.id === uid);
+            slotEl.classList.add('filled');
+            const img = document.createElement('img'); img.src = uData.img; slotEl.appendChild(img);
+            const name = document.createElement('div'); name.className = 'name'; name.innerText = uData.name; slotEl.appendChild(name);
+            const removeHint = document.createElement('div'); removeHint.className = 'remove-hint'; removeHint.innerText = '×'; slotEl.appendChild(removeHint);
+        } else {
+            slotEl.classList.remove('filled');
+            const ph = document.createElement('div'); ph.className = 'placeholder'; ph.innerText = '+'; slotEl.appendChild(ph);
+        }
+    });
+
+    // 4. カウンター・ボタン更新
+    const filledCount = DRAFT.unitSlots.filter(x => x !== null).length;
+    
+    const uCount = document.getElementById('draft-unit-count');
+    uCount.innerText = `UNITS: ${filledCount} / 3`;
+    uCount.className = filledCount === 3 ? 'draft-counter ok' : 'draft-counter';
+
+    const cCount = document.getElementById('draft-card-count');
+    cCount.innerText = `CARDS: ${DRAFT.selectedCards.size} / 5`;
+    cCount.className = DRAFT.selectedCards.size === 5 ? 'draft-counter ok' : 'draft-counter';
+
+    document.getElementById('btn-draft-confirm').disabled = (filledCount !== 3 || DRAFT.selectedCards.size !== 5);
+  },
+
+  confirm: () => {
+    // 1. 在庫とデッキにドラフト結果を保存
+    STATE.inventory.units = [...DRAFT.unitSlots];
+    STATE.deck.units = [...DRAFT.unitSlots];
+    
+    STATE.inventory.cards = Array.from(DRAFT.selectedCards);
+    STATE.deck.cards = Array.from(DRAFT.selectedCards);
+    
+    // 2. 最初のショップ生成
+    STATE.shopItems = [];
+    
+    // ① 選んだユニットを追加
+    DRAFT.unitSlots.forEach(uid => {
+        const uData = DB.units.find(u => u.id === uid);
+        if (uData) {
+            STATE.shopItems.push({ ...uData, _type: 'unit' });
+        }
+    });
+
+    // ② 選んだカードを追加
+    DRAFT.selectedCards.forEach(cid => {
+        const cData = DB.cards.find(c => c.id === cid);
+        if (cData) {
+            STATE.shopItems.push({ ...cData, _type: 'card' });
+        }
+    });
+
+    // ③ ▼▼▼ 追加：すべてのアップグレードを追加 ▼▼▼
+    DB.upgrades.forEach(u => {
+        STATE.shopItems.push({ ...u, _type: 'upgrade' });
+    });
+    // ▲▲▲ 追加ここまで ▲▲▲
+
+    // 3. ハンガー画面へ移動
+    GAME.goToHangar();
+  }
+
+};
+
+const HANGAR = {
+  // ... (currentTab などはそのまま) ...
+  currentTab: 'all', selectedItem: null,
+
+  generateShop: () => {
+      STATE.shopItems = [];
+      let pool = [];
+
+      // ★追加：ユニットの最大レベル定義（バトル側の制限に合わせる）
+      const MAX_UNIT_LV = 10;
+
+      // 1. ユニット：所持済み かつ 最大レベル未満 ならプールに入れる
+      DB.units.forEach(u => { 
+          // 所持しているか？
+          if (STATE.inventory.units.includes(u.id)) {
+             // ★修正：レベルチェックを追加（未定義ならLv1とみなす）
+             const curLv = u.level || 1;
+             if (curLv < MAX_UNIT_LV) {
+                 pool.push({ ...u, _type: 'unit' }); 
+             }
+          }
+      });
+
+      // 2. カード：
+      //  - 所持済み かつ レベルが MaxLevel 未満ならプールに入れる（新規カードは出さない）
+      DB.cards.forEach(c => { 
+          const isOwned = STATE.inventory.cards.includes(c.id);
+          
+          // ▼▼▼ 修正：未所持 (!isOwned) の条件を削除し、持っているカードの強化のみにする ▼▼▼
+          if (isOwned && c.level < c.maxLevel) {
+              pool.push({ ...c, _type: 'card' }); 
+          }
+          // ▲▲▲ 修正ここまで ▲▲▲
+      });
+
+      // 3. アップグレード：未所持ならプールに入れる
+      DB.upgrades.forEach(u => { 
+          if (!STATE.inventory.upgrades.includes(u.id)) {
+              pool.push({ ...u, _type: 'upgrade' });
+          }
+      });
+
+      // シャッフルして5つ選ぶ
+      while (STATE.shopItems.length < 5) {
+          if (pool.length === 0) break;
+          const randIdx = Math.floor(Math.random() * pool.length);
+          const item = pool[randIdx];
+          
+          if (!STATE.shopItems.find(x => x.id === item.id)) {
+              STATE.shopItems.push(item);
+          }
+          pool.splice(randIdx, 1);
+      }
+      
+      // 5枠埋まらなかった場合の処理（SOLD OUT表示用など）は現状のままでOK
+  },
+
+
+  // ★ 修正：リロール機能
+  reroll: () => {
+      // ステージ1なら実行しない（念の為のガード）
+      if (STATE.stage === 1) return;
+
+      const cost = 100;
+      if (STATE.money >= cost) {
+          STATE.money -= cost;
+          HANGAR.generateShop(); 
+          HANGAR.selectedItem = null;
+          HANGAR.updateInfoPanel();
+          HANGAR.updateUI();
+          SOUND.play('count');
+      } else {
+          alert("Not enough money!");
+      }
+  },
+
+  // ★ 修正：画面更新時にボタンを制御
+  updateUI: () => {
+    document.getElementById('ui-money').innerText = STATE.money;
+    document.getElementById('ui-stage').innerText = STATE.stage;
+    
+    // ▼▼▼ 追加：ステージ1ならリロールボタンを無効化 ▼▼▼
+    const rerollBtn = document.getElementById('btn-reroll');
+    if (rerollBtn) {
+        if (STATE.stage === 1) {
+            rerollBtn.disabled = true;
+            rerollBtn.style.opacity = 0.5;
+            rerollBtn.style.cursor = 'not-allowed';
+            rerollBtn.innerText = "LOCKED"; // 文字を変えて分かりやすく
+        } else {
+            rerollBtn.disabled = false;
+            rerollBtn.style.opacity = 1.0;
+            rerollBtn.style.cursor = 'pointer';
+            rerollBtn.innerText = "REROLL $100";
+        }
+    }
+    // ▲▲▲ 追加ここまで ▲▲▲
+
+    HANGAR.renderShop();
+  },
+
+  setTab: (tab) => {
+    HANGAR.currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    HANGAR.selectedItem = null; HANGAR.updateInfoPanel(); HANGAR.renderShop();
+  },
+
+  renderShop: () => {
+    const list = document.getElementById('shop-list'); 
+    list.innerHTML = '';
+    let items = STATE.shopItems;
+    if (HANGAR.currentTab !== 'all') items = items.filter(x => x._type === HANGAR.currentTab);
+
+    items.forEach(item => {
+      const el = UI.createItemCard(item, item._type);
+      const isOwned = (item._type === 'unit' && STATE.inventory.units.includes(item.id)) ||
+                      (item._type === 'card' && STATE.inventory.cards.includes(item.id)) ||
+                      (item._type === 'upgrade' && STATE.inventory.upgrades.includes(item.id));
+      // ▼▼▼ 修正: バッジ（文字）は作らず、アップグレード済みなら薄くするだけにする ▼▼▼
+      if (isOwned && item._type === 'upgrade') {
+          el.style.opacity = 0.5;
+      }
+      // ▲▲▲ 修正ここまで ▲▲▲
+
+      el.onclick = () => HANGAR.select(item, isOwned);
+      list.appendChild(el);
+    });
+    
+    if (items.length === 0) {
+        const msg = document.createElement('div');
+        msg.style.color = '#889'; msg.style.width = '100%'; msg.style.textAlign = 'center'; msg.style.marginTop = '20px';
+        msg.innerText = "NO ITEMS IN THIS CATEGORY";
+        list.appendChild(msg);
+    }
+  },
+
+  select: (item, isOwned) => { HANGAR.selectedItem = { ...item, isOwned }; HANGAR.updateInfoPanel(); },
+  
+  // HANGARオブジェクトの中にある updateInfoPanel をこれに置き換え
+  updateInfoPanel: () => {
+    const panel = document.getElementById('info-content'); 
+    const empty = document.getElementById('info-empty');
+    const item = HANGAR.selectedItem;
+    
+    if (!item) { panel.style.display='none'; empty.style.display='flex'; return; }
+    
+    empty.style.display='none'; panel.style.display='flex';
+    
+    // 基本情報の表示
+    document.getElementById('info-name').innerText = item.name || "UNKNOWN";
+    const typeText = item._type ? item._type.toUpperCase() : "ITEM";
+    const roleText = item.role ? ` / ${item.role}` : "";
+    document.getElementById('info-role').innerText = typeText + roleText;
+    
+    // ▼▼▼ 修正：説明文生成ロジックを安全化 ▼▼▼
+    let descHtml = item.desc || "No Description";
+
+    // カードかつ、所持済みで、まだ成長の余地がある場合
+    if (item._type === 'card' && item.isOwned && item.maxLevel > 1) {
+        
+        // レベルとValsの安全な取得
+        const curLv = item.level || 1; 
+        
+        // ★修正点: valsが存在し、配列であることを確認してからアクセスする
+        if (Array.isArray(item.vals) && item.vals.length > curLv) {
+            const currentVal = item.vals[curLv - 1]; // 現在の値
+            const nextVal = item.vals[curLv];        // 次の値
+
+            // undefinedチェックをしてから表示
+            if (currentVal !== undefined && nextVal !== undefined) {
+                descHtml += `<br><br><span style="color:#889; font-size:10px;">>> NEXT UPDATE (Lv.${curLv + 1})</span>`;
+                descHtml += `<br><span style="color:#fff;">EFFECT: <span style="color:#889;">${currentVal}</span> <span style="color:#0ff; font-weight:bold;">➜ ${nextVal}</span></span>`;
+            }
+        }
+    }
+    document.getElementById('info-desc').innerHTML = descHtml;
+    // ▲▲▲ 修正ここまで ▲▲▲
+    
+    // 価格計算
+    let finalPrice = item.price;
+    if (STATE.inventory.upgrades.includes('u_discount')) {
+        finalPrice = Math.floor(finalPrice * 0.8);
+    }
+    document.getElementById('info-price').innerText = finalPrice;
+    
+    // ボタン制御
+    const btn = document.getElementById('btn-buy');
+    const MAX_UNIT_LV = 10; 
+
+    if (item.isOwned) {
+        // ■ アップグレード (1回限り)
+        if (item._type === 'upgrade') { 
+            btn.innerText = "MAXED"; 
+            btn.disabled = true; 
+        } 
+        // ■ ユニット (Lv10制限)
+        else if (item._type === 'unit') {
+            const curLv = item.level || 1;
+            if (curLv >= MAX_UNIT_LV) {
+                btn.innerText = "MAXED";
+                btn.disabled = true;
+            } else {
+                btn.innerText = "LEVEL UP"; 
+                btn.disabled = (STATE.money < finalPrice);
+            }
+        }
+        // ■ カード (個別のmaxLevel制限)
+        else if (item._type === 'card') {
+            const curLv = item.level || 1;
+            // maxLevelが無い場合は1とみなす
+            const maxLv = item.maxLevel || 1;
+            if (curLv >= maxLv) {
+                btn.innerText = "MAXED";
+                btn.disabled = true;
+            } else {
+                btn.innerText = "LEVEL UP";
+                btn.disabled = (STATE.money < finalPrice);
+            }
+        }
+    } else { 
+        // 未所持なら購入ボタン
+        btn.innerText = "BUY"; 
+        btn.disabled = (STATE.money < finalPrice); 
+    }
+  },
+
+  buy: () => {
+    const item = HANGAR.selectedItem;
+    if (!item) return;
+
+    // 価格再計算
+    let finalPrice = item.price;
+    if (STATE.inventory.upgrades.includes('u_discount')) {
+        finalPrice = Math.floor(finalPrice * 0.8);
+    }
+
+    if (STATE.money < finalPrice) {
+        SOUND.play('cancel'); // お金が足りない時の音
+        return;
+    }
+
+    // ▼▼▼ 演出処理ここから ▼▼▼
+
+    // 1. パネルをフラッシュさせる
+    const panel = document.querySelector('.info-panel');
+    panel.classList.remove('fx-buy-flash');
+    void panel.offsetWidth; // リフロー強制
+    panel.classList.add('fx-buy-flash');
+
+    // 2. ボタンの位置を取得してエフェクトの発生源にする
+    const btn = document.getElementById('btn-buy');
+    const rect = btn.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    // 3. パーティクルを散らす (色はアイテムタイプに合わせる)
+    let pColor = '#fff';
+    if (item._type === 'unit') {
+        if (item.role === 'ATK') pColor = '#f05';
+        else if (item.role === 'TANK') pColor = '#0f0';
+        else pColor = '#0ff';
+    } else if (item._type === 'card') {
+        pColor = (item.type === 'atk' || item.type === 'ATK') ? '#f05' : '#0ff';
+    } else if (item._type === 'upgrade') {
+        pColor = '#0f0'; // アップグレードは緑
+    }
+
+    for(let i=0; i<12; i++) {
+        const p = document.createElement('div');
+        p.className = 'shop-particle';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.color = pColor;
+        p.style.backgroundColor = pColor;
+        
+        // ランダムな方向に飛ばす
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 50;
+        p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+        
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 600);
+    }
+
+    // 4. 金額をフロート表示 (-$500)
+    const floatTxt = document.createElement('div');
+    floatTxt.className = 'shop-float-text';
+    floatTxt.innerText = `-$${finalPrice}`;
+    floatTxt.style.left = cx + 'px';
+    floatTxt.style.top = (rect.top - 20) + 'px';
+    document.body.appendChild(floatTxt);
+    setTimeout(() => floatTxt.remove(), 1000);
+
+    // ▲▲▲ 演出処理ここまで ▲▲▲
+
+
+    // 実際の購入処理
+    STATE.money -= finalPrice;
+    
+    // ■ 未所持の場合：インベントリに追加
+    if (!item.isOwned) {
+        if (item._type === 'unit') STATE.inventory.units.push(item.id);
+        if (item._type === 'card') STATE.inventory.cards.push(item.id);
+        if (item._type === 'upgrade') STATE.inventory.upgrades.push(item.id);
+        item.isOwned = true;
+    } else {
+        // ■ 所持済みの場合（レベルアップ処理）
+        
+        // 1. ユニットのレベルアップ
+        if (item._type === 'unit') {
+            const original = DB.units.find(u => u.id === item.id);
+            if (original) {
+                if (!original.level) original.level = 1;
+                original.level++;
+                
+                // ▼▼▼ 修正：1.2倍 → 1.3倍 に変更（バトル中の上昇幅と統一） ▼▼▼
+                original.hp = Math.floor(original.hp * 1.3);
+                original.atk = Math.floor(original.atk * 1.3);
+                // ▲▲▲ 修正ここまで ▲▲▲
+
+                item.hp = original.hp; item.atk = original.atk; item.level = original.level; 
+            }
+        }
+        
+        // 2. カードのレベルアップ部分
+        if (item._type === 'card') {
+            const original = DB.cards.find(c => c.id === item.id);
+            if (original && original.level < original.maxLevel) {
+                original.level++;
+                item.level = original.level;
+                
+                const lvIdx = original.level - 1;
+                // ▼▼▼ 修正：[タグ]を残して数値を更新 ▼▼▼
+                if (item.id === 'lstun') original.desc = `[妨害] 詠唱中の敵1体を【${original.vals[lvIdx]}秒間スタン】させる。`;
+                if (item.id === 'rage')  original.desc = `[強化] 味方1体の攻撃力を一定時間【${original.vals[lvIdx]}倍】にする。`;
+                if (item.id === 'juice') original.desc = `[加速] 味方1体の詠唱・CD速度を【${original.vals[lvIdx]}倍】にする。`;
+                if (item.id === 'bom')   original.desc = `[爆撃] 敵味方・モブ問わず画面全体に【${original.vals[lvIdx]}ダメージ】。`;
+                if (item.id === 'grow')  original.desc = `[育成] 味方1体に【経験値 ${original.vals[lvIdx]}】を直接与える。`;
+                // ▲▲▲ 修正ここまで ▲▲▲
+
+                item.desc = original.desc; 
+            }
+        }
+    }
+
+    HANGAR.updateUI(); HANGAR.updateInfoPanel(); 
+    
+    // 音も豪華にする
+    SOUND.play('count');
+    SOUND.play('bit');
+  },
+
+};
+
+
+// ============================================
+//  BATTLE SYSTEM INTEGRATION (v17.5)
+// ============================================
+
+const CONFIG = {
+  bgmVolume: 0.5, // 50%
+  seVolume: 0.5   // 50%
+};
+
+const SOUND = {
+  ctx: null,
+  bgmBuffer: null,
+  bgmSource: null,
+  bgmGain: null,
+  
+  init: async () => { 
+    try {
+      if (!SOUND.ctx) SOUND.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+      if (SOUND.ctx.state === 'suspended') SOUND.ctx.resume();
+
+      // BGM用の音量ノードを作成
+      if (!SOUND.bgmGain) {
+          SOUND.bgmGain = SOUND.ctx.createGain();
+          SOUND.bgmGain.gain.value = CONFIG.bgmVolume;
+          SOUND.bgmGain.connect(SOUND.ctx.destination);
+      }
+
+      // ★ここで battlebgm.mp3 を読み込みます
+      if (!SOUND.bgmBuffer) {
+          const res = await fetch('battlebgm.mp3');
+          const arr = await res.arrayBuffer();
+          SOUND.bgmBuffer = await SOUND.ctx.decodeAudioData(arr);
+      }
+    } catch(e) { console.log('Audio init failed', e); }
+  },
+
+  playBGM: () => {
+      if (!SOUND.ctx || !SOUND.bgmBuffer) return;
+      SOUND.stopBGM(); // 既に鳴ってたら止める
+      
+      SOUND.bgmSource = SOUND.ctx.createBufferSource();
+      SOUND.bgmSource.buffer = SOUND.bgmBuffer;
+      SOUND.bgmSource.loop = true; // ループ再生
+      SOUND.bgmSource.connect(SOUND.bgmGain);
+      SOUND.bgmSource.start(0);
+  },
+
+  stopBGM: () => {
+      if (SOUND.bgmSource) {
+          try { SOUND.bgmSource.stop(); } catch(e){}
+          SOUND.bgmSource = null;
+      }
+  },
+
+  updateBGMVolume: (val) => {
+    if (SOUND.bgmGain) SOUND.bgmGain.gain.value = val;
+  },
+
+  play: (type) => {
+    if (!SOUND.ctx) return;
+    const osc = SOUND.ctx.createOscillator(); const gain = SOUND.ctx.createGain();
+    const t = SOUND.ctx.currentTime; osc.connect(gain); gain.connect(SOUND.ctx.destination);
+    
+    const vol = CONFIG.seVolume;
+
+    if (type === 'shoot') { 
+      osc.type='triangle'; osc.frequency.setValueAtTime(880,t); osc.frequency.exponentialRampToValueAtTime(110,t+0.1); 
+      gain.gain.setValueAtTime(vol * 0.4,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1); osc.start(t); osc.stop(t+0.1); 
+    } 
+    else if (type === 'hit') { 
+      osc.type='square'; osc.frequency.setValueAtTime(100,t); osc.frequency.exponentialRampToValueAtTime(50,t+0.05); 
+      gain.gain.setValueAtTime(vol * 0.8,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.05); osc.start(t); osc.stop(t+0.05); 
+    }
+    else if (type === 'heal') { osc.type='sine'; osc.frequency.setValueAtTime(440,t); osc.frequency.linearRampToValueAtTime(880,t+0.3); gain.gain.setValueAtTime(vol * 0.5,t); gain.gain.linearRampToValueAtTime(0,t+0.3); osc.start(t); osc.stop(t+0.3); }
+    else if (type === 'shield') { osc.type='triangle'; osc.frequency.setValueAtTime(220,t); gain.gain.setValueAtTime(vol * 0.5,t); gain.gain.linearRampToValueAtTime(0,t+0.2); osc.start(t); osc.stop(t+0.2); }
+    else if (type === 'parry') { 
+      osc.type='sine'; osc.frequency.setValueAtTime(1500,t); osc.frequency.exponentialRampToValueAtTime(800,t+0.3); 
+      gain.gain.setValueAtTime(vol * 0.8,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.3); osc.start(t); osc.stop(t+0.3);
+    }
+    else if (type === 'stun') { 
+      osc.type='square'; osc.frequency.setValueAtTime(80,t); osc.frequency.linearRampToValueAtTime(40,t+0.3);
+      gain.gain.setValueAtTime(vol * 1.0,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.3); osc.start(t); osc.stop(t+0.3);
+    }
+    else if (type === 'bit') {
+      osc.type='sine'; osc.frequency.setValueAtTime(600,t); osc.frequency.exponentialRampToValueAtTime(300,t+0.1);
+      gain.gain.setValueAtTime(vol * 0.5,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1); osc.start(t); osc.stop(t+0.1);
+    }
+    else if (type === 'levelup') { 
+      osc.type='triangle'; osc.frequency.setValueAtTime(440,t); osc.frequency.linearRampToValueAtTime(880,t+0.1); osc.frequency.linearRampToValueAtTime(1760,t+0.4);
+      gain.gain.setValueAtTime(vol,t); gain.gain.linearRampToValueAtTime(0,t+0.6); osc.start(t); osc.stop(t+0.6); 
+    }
+    else if (type === 'explode') { 
+      osc.type='sawtooth'; osc.frequency.setValueAtTime(150,t); osc.frequency.exponentialRampToValueAtTime(20,t+0.3); 
+      gain.gain.setValueAtTime(vol * 1.5,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.3); osc.start(t); osc.stop(t+0.3);
+    }
+    else if (type === 'heavy_explode') { 
+      osc.type='sawtooth'; osc.frequency.setValueAtTime(80,t); osc.frequency.exponentialRampToValueAtTime(10,t+0.5); 
+      gain.gain.setValueAtTime(vol * 2.5,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.5); osc.start(t); osc.stop(t+0.5);
+    }
+    else if (type === 'ready') { osc.type='sine'; osc.frequency.setValueAtTime(880,t); gain.gain.setValueAtTime(vol * 0.3,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1); osc.start(t); osc.stop(t+0.1); } 
+    else if (type === 'cancel') { osc.type='square'; osc.frequency.setValueAtTime(220,t); osc.frequency.linearRampToValueAtTime(110,t+0.1); gain.gain.setValueAtTime(vol * 0.5,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1); osc.start(t); osc.stop(t+0.1); }
+    else if (type === 'count') { osc.type='sine'; osc.frequency.setValueAtTime(440,t); gain.gain.setValueAtTime(vol,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.2); osc.start(t); osc.stop(t+0.2); }
+    else if (type === 'go') { osc.type='square'; osc.frequency.setValueAtTime(880,t); gain.gain.setValueAtTime(vol,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.4); osc.start(t); osc.stop(t+0.4); }
+  }
+};
+
+const SPECS = {
+  cast: { atk: 4.0, fast: 1.3, mob: 2.3, supp: 2.0 },
+  cd: { atk: 8.0, guard: 10.0, miss: 4.0, boss: 20.0, stun: 10.0, mob_kill: 4.0, card_reload: 12.0 },
+  val: { heal: 300, shield: 100, grow: 15, wipe: 100 },
+  xp_req: 30,
+  respawn: { supp: 15, atk: 20, tank: 30, mob: 40 }
+};
+
+const UNIT_DEFS = {
+  p_tank: { hp: 400, atk: 50, role: 'tank', team: 'p', xp: 50 },
+  p_supp: { hp: 200, atk: 40, role: 'supp', team: 'p', xp: 40 },
+  p_atk:  { hp: 250, atk: 60, role: 'atk',  team: 'p', xp: 60 },
+  e_tank: { hp: 550, atk: 50, role: 'tank', team: 'e', xp: 50 },
+  e_supp: { hp: 250, atk: 40, role: 'supp', team: 'e', xp: 40 },
+  e_atk:  { hp: 300, atk: 60, role: 'atk',  team: 'e', xp: 60 },
+  mob:    { hp: 500, xp: 30, type: 'norm', team: 'mob' },
+  boss:   { hp: 3500 }
+};
+
+// Map Step 2 Card IDs to Step 3 Card IDs/Logic
+// ▼▼▼ 修正：全カードを正式なIDで定義 ▼▼▼
+const CARD_MAP = {
+  'heal':   { id: 'heal',   name: 'HEAL',      type: 'def',  speed: 'fast' },
+  'shld': { id: 'shld',   name: 'SHIELD',    type: 'def',  speed: 'fast' },
+  'quick':  { id: 'quick',  name: 'QUICK',     type: 'def',  speed: 'fast' },
+  'grow':   { id: 'grow',   name: 'GROW',      type: 'def',  speed: 'fast' },
+  'lstun':  { id: 'lstun',  name: 'LIL STUN',  type: 'jam',  speed: 'fast' }, // 妨害
+  'rage':   { id: 'rage',   name: 'RAGE',      type: 'buff', speed: 'fast' }, // 強化
+  'feed':   { id: 'feed',   name: 'FEED',      type: 'spec', speed: 'fast' }, // 特殊
+  'juice':  { id: 'juice',  name: 'JUICE',     type: 'buff', speed: 'fast' }, // 加速
+  'bom':    { id: 'bom',    name: 'BOM',       type: 'atk',  speed: 'fast' }  // 全体攻撃
+};
+
+const BATTLE_STATE = {
+  running: false, time: 300, units: {}, hand: [null, null], drag: null,
+  difficulty: 'normal',
+  enemyCardCd: 5, enemyMaxCardCd: 5,
+  
+  enemyDeck: [], 
+  // ▼▼▼ 追加: 敵の強化状態管理 ▼▼▼
+  enemyUpgrades: [],     // 敵が持っているパッシブ (例: ['u_hp', 'u_atk'])
+  enemyCardLevels: {},   // 敵のカードレベル (例: { 'bom': 2 })
+  // ▲▲▲ 追加ここまで ▲▲▲
+
+  enemyHand: [ 
+      { cd: 0, max: 1, cast: 0, maxCast: 1, act: null, cardId: null, reload: 0, maxReload: SPECS.cd.card_reload }, 
+      { cd: 0, max: 1, cast: 0, maxCast: 1, act: null, cardId: null, reload: 0, maxReload: SPECS.cd.card_reload } 
+  ],
+  pCoreTimer: 0, eCoreTimer: 0
+};
+
+const BATTLE = {
+  start: (diff) => {
+    UI.showScreen('screen-battle');
+    
+    // リセット処理
+    BATTLE_STATE.hand = [null, null];
+    document.querySelectorAll('.slot .card').forEach(el => el.remove());
+    BATTLE_STATE.enemyHand = [ 
+        { cd: 0, max: 1, cast: 0, maxCast: 1, act: null, cardId: null, reload: 0, maxReload: SPECS.cd.card_reload }, 
+        { cd: 0, max: 1, cast: 0, maxCast: 1, act: null, cardId: null, reload: 0, maxReload: SPECS.cd.card_reload } 
+    ];
+    document.querySelectorAll('.mob, .box, .core').forEach(el => {
+        el.classList.remove('dead', 'casting', 'shaking', 'active-flash', 'highlight', 'shaking');
+        if (el.classList.contains('mob')) {
+            el.className = 'mob'; el.style.border = ''; el.style.backgroundColor = 'transparent'; el.style.transform = ''; 
+        }
+        const mask = el.querySelector('.cd-mask');
+        if (mask) { mask.style.height = '0%'; mask.innerText = ''; mask.style.backgroundColor = 'transparent'; }
+        const stGrid = el.querySelector('.status-grid');
+        if (stGrid) stGrid.innerHTML = '';
+    });
+    const selectors = ['.pop', '.particle', '.bit', '.fx-cross', '.fx-white-overlay', '.fx-lvup-overlay', '.fx-thunder', '.fx-spark', '.ghost', '.target-frame'];
+    document.querySelectorAll(selectors.join(', ')).forEach(el => el.remove());
+    document.getElementById('drag-line').style.display = 'none';
+    BATTLE_STATE.drag = null;
+
+    BATTLE_STATE.time = 240; 
+    const btn = document.getElementById('pause-btn');
+    const forcePause = (e) => { e.stopPropagation(); e.preventDefault(); BATTLE.togglePause(); };
+    btn.ontouchstart = forcePause; btn.onmousedown = forcePause;
+    BATTLE_STATE.difficulty = diff || 'normal';
+    
+    SOUND.init().then(() => { SOUND.playBGM(); });
+    BATTLE_STATE.running = false;
+    
+    // ★ここが変わりました：敵データのロード
+    BATTLE_STATE.enemyDeck = [];
+    BATTLE_STATE.enemyUpgrades = [];
+    BATTLE_STATE.enemyCardLevels = {};
+
+    if (STATE.mode === 'practice') {
+        BATTLE_STATE.enemyDeck = ['heal', 'quick', 'grow', 'shld', 'feed'];
+        BATTLE_STATE.enemyDeck.forEach(id => BATTLE_STATE.enemyCardLevels[id] = 1);
+    } else if (STATE.mode === 'survival' && GAME.nextMatch) {
+        // スカウト画面で作ったデータをロード
+        BATTLE_STATE.enemyDeck = [...GAME.nextMatch.deck];
+        BATTLE_STATE.enemyUpgrades = [...GAME.nextMatch.upgrades];
+        BATTLE_STATE.enemyCardLevels = { ...GAME.nextMatch.cardLevels };
+        
+        // パッシブ効果の適用 (HPアップ)
+        if (BATTLE_STATE.enemyUpgrades.includes('u_hp')) {
+            ['e_atk', 'e_tank', 'e_supp'].forEach(id => {
+               // initEntities前なのでここでは適用できないが、後で適用されるようにフラグ管理してもよい
+               // 今回はinitEntitiesの中で計算済みユニットを使うので、ここでは何もしなくてOK
+            });
+        }
+    } else {
+        const allCards = Object.values(CARD_MAP);
+        for (let i = 0; i < 5; i++) {
+            const randCard = allCards[Math.floor(Math.random() * allCards.length)];
+            BATTLE_STATE.enemyDeck.push(randCard.id);
+            BATTLE_STATE.enemyCardLevels[randCard.id] = 1;
+        }
+    }
+
+    // ユニット配置
+    BATTLE.initEntities();
+
+    // 手札補充
+    BATTLE.fillHand(0); BATTLE.fillHand(1);
+    BATTLE.fillEnemyHand(0); BATTLE.fillEnemyHand(1);
+    
+    [0,1].forEach(i => {
+        BATTLE_STATE.enemyHand[i].cast = 0; BATTLE_STATE.enemyHand[i].act = null; 
+        BATTLE_STATE.enemyHand[i].reload = 0; BATTLE_STATE.enemyHand[i].cd = 0;
+    });
+
+    BATTLE_DRAW.draw();
+    BATTLE.runCountdown(3);
+
+    const w = window;
+    w.removeEventListener('mousedown', INPUT.start); w.removeEventListener('mousemove', INPUT.move); w.removeEventListener('mouseup', INPUT.end);
+    w.removeEventListener('touchstart', INPUT.start); w.removeEventListener('touchmove', INPUT.move); w.removeEventListener('touchend', INPUT.end);
+    w.addEventListener('mousedown', INPUT.start); w.addEventListener('mousemove', INPUT.move); w.addEventListener('mouseup', INPUT.end);
+    w.addEventListener('touchstart', INPUT.start, {passive: false}); w.addEventListener('touchmove', INPUT.move, {passive: false}); w.addEventListener('touchend', INPUT.end);
+
+    if(BATTLE_STATE.loopId) clearInterval(BATTLE_STATE.loopId);
+    if(BATTLE_STATE.drawId) clearInterval(BATTLE_STATE.drawId);
+    if(BATTLE_STATE.tickId) clearInterval(BATTLE_STATE.tickId);
+
+    BATTLE_STATE.loopId = setInterval(BATTLE.update, 50); 
+    BATTLE_STATE.drawId = setInterval(BATTLE_DRAW.draw, 50);   
+    BATTLE_STATE.tickId = setInterval(BATTLE.tick, 1000); 
+  },
+  
+  // 一時停止ボタンが押されたとき
+  togglePause: () => {
+
+    BATTLE_STATE.running = false; // ゲームを止める
+    document.getElementById('pause-modal').classList.remove('hidden'); // 画面を出す
+    document.getElementById('pause-modal').style.display = 'flex'; // 表示を確実にする
+  },
+
+  // 再開ボタンが押されたとき
+  resume: () => {
+    document.getElementById('pause-modal').classList.add('hidden'); // 画面を消す
+    document.getElementById('pause-modal').style.display = 'none';
+    BATTLE_STATE.running = true; // ゲーム再開
+  },
+
+  // やめるボタンが押されたとき
+  quitBattle: () => {
+    BATTLE.stop(); // ★ここが重要！停止処理を呼ぶ
+    SOUND.stopBGM();
+    document.getElementById('pause-modal').classList.add('hidden');
+    document.getElementById('pause-modal').style.display = 'none';
+    GAME.goToTitle(); 
+  },
+
+  showResult: (result) => {
+    // 1. 時を止める
+    BATTLE_STATE.running = false;
+    
+    const modal = document.getElementById('result-modal');
+    const title = document.getElementById('res-title');
+    const sub = document.getElementById('res-sub');
+    
+    // UI初期化（アニメーションのリセット）
+    title.classList.remove('slam-anim');
+    title.style.opacity = 1; 
+    
+    // ゴッドレイがあれば消しておく（再利用のため）
+    const oldRays = modal.querySelector('.god-rays');
+    if (oldRays) oldRays.remove();
+
+    // ----------------------------------------------------
+    // ■ 敗北 (LOSE)
+    // ----------------------------------------------------
+    if (result === 'lose') {
+        SAVE.clear();
+        modal.style.display = 'flex';
+        title.innerText = "GAME OVER";
+        title.style.color = "#f05";
+        sub.innerText = `FAILED AT STAGE ${STATE.stage}...`;
+        SOUND.play('heavy_explode');
+        return;
+    }
+
+    // ----------------------------------------------------
+    // ■ 勝利 (WIN) - 判定
+    // ----------------------------------------------------
+    
+    // ★最終ステージクリアかどうか判定
+    const isAllClear = (STATE.mode === 'survival' && STATE.stage >= 5);
+
+    // ▼▼▼ 修正：報酬計算ロジックを変更 ▼▼▼
+    // 基本計算: 300 + (ステージ数 × 100)
+    // Stage 1クリア: 300 + 100 = 400
+    // Stage 2クリア: 300 + 200 = 500
+    // Stage 3クリア: 300 + 300 = 600
+    // Stage 4クリア: 300 + 400 = 700
+    let reward = 300 + (STATE.stage * 100);
+
+    // BIT_MINER (u_money) ボーナス: +100 → +200 に変更
+    if (STATE.inventory.upgrades.includes('u_money')) reward += 200;
+    
+    STATE.money += reward;
+    // ▲▲▲ 修正ここまで ▲▲▲
+    
+    // ステージ進行（全クリでなければ進める）
+    if (STATE.mode === 'survival' && !isAllClear) STATE.stage++;
+
+    // ----------------------------------------------------
+    // パターンA: 通常クリア (あっさり演出)
+    // ----------------------------------------------------
+    if (!isAllClear) {
+        modal.style.display = 'flex'; // ★すぐに表示
+        title.innerText = "VICTORY";
+        title.style.color = "#0ff";
+        sub.innerText = "STAGE CLEARED";
+        SOUND.play('levelup'); // 軽めの音
+        return;
+    }
+
+    // ----------------------------------------------------
+    // パターンB: 完全制覇 (脳汁ドバドバ演出)
+    // ----------------------------------------------------
+    if (isAllClear) {
+        SAVE.clear(); // データクリア
+        BATTLE_STATE.lastResult = 'clear';
+
+        // ① 閃光 (Flash Bang)
+        const flash = document.createElement('div');
+        flash.className = 'flash-bang';
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 1500);
+
+        // ② 大爆発音 & 画面揺れ
+        SOUND.play('heavy_explode');
+        BATTLE_DRAW.screenShake();
+
+        // ③ タイトル文字を隠して「溜め」を作る
+        title.style.opacity = 0; 
+
+        // ④ 600ms後にドカーン！
+        setTimeout(() => {
+            modal.style.display = 'flex';
+            
+            // テキスト設定
+            title.innerText = "ALL CLEAR!!";
+            title.style.color = "#ffd700"; 
+            sub.innerText = "THANK YOU FOR PLAYING!";
+            
+            // ゴッドレイ（後光）追加
+            const rays = document.createElement('div');
+            rays.className = 'god-rays';
+            modal.insertBefore(rays, modal.firstChild);
+
+            // アニメーション適用（叩きつけ）
+            title.classList.add('slam-anim');
+            
+            // 音：ファンファーレ的な連続音
+            SOUND.play('levelup'); 
+            setTimeout(() => SOUND.play('count'), 200);
+
+            // 紙吹雪乱舞
+            BATTLE_DRAW.victoryConfetti();
+            setTimeout(() => BATTLE_DRAW.victoryConfetti(), 400);
+
+        }, 600); // ★この遅延が気持ちよさのポイント
+    }
+  },
+
+  endBattle: () => {
+    BATTLE.stop(); // ★ここが重要！次に行く前に今のバトルを止める
+    SOUND.stopBGM();
+    document.getElementById('result-modal').style.display = 'none';
+
+    if (BATTLE_STATE.lastResult === 'lose' || BATTLE_STATE.lastResult === 'clear') {
+        GAME.goToTitle();
+    } else {
+        GAME.goToHangar();
+    }
+  },
+
+  runCountdown: (num) => {
+    const el = document.getElementById('layer-count');
+    if(!el) return;
+    el.className = ''; void el.offsetWidth;
+    if (num > 0) {
+      el.innerText = num; el.className = 'count-anim'; el.style.color = '#fff'; 
+      SOUND.play('count');
+      setTimeout(() => { BATTLE.runCountdown(num - 1); }, 1000);
+    } else {
+      el.innerText = "GO!"; el.className = 'count-anim'; el.style.color = '#0ff'; 
+      SOUND.play('go');
+      setTimeout(() => { el.className = ''; el.innerText = ""; BATTLE_STATE.running = true; }, 1000);
+    }
+  },
+
+  initEntities: () => {
+    // 1. 味方 (Player) の設定
+    const pSlots = ['p_supp', 'p_atk', 'p_tank'];
+    pSlots.forEach((slotId, idx) => {
+        const uId = STATE.inventory.units[idx];
+        const selectedUnit = DB.units.find(u => u.id === uId) || DB.units.find(u => u.id === 'golden');
+        let pDef = { ...UNIT_DEFS[slotId] };
+
+        if (selectedUnit) {
+            document.getElementById(slotId).style.backgroundImage = `url('${selectedUnit.img}')`;
+            pDef.charId = selectedUnit.id;
+            if (selectedUnit.role) pDef.role = selectedUnit.role.toLowerCase();
+            if (selectedUnit.level) pDef.level = selectedUnit.level; 
+            if (selectedUnit.hp) pDef.hp = selectedUnit.hp;
+            if (selectedUnit.atk) pDef.atk = selectedUnit.atk;
+            if (selectedUnit.spd) pDef.castTime = selectedUnit.spd;
+        }
+        BATTLE.spawn(slotId, pDef);
+    });
+
+    // 2. 敵 (Enemy) の設定
+    const roles = ['supp', 'atk', 'tank'];
+    
+    // スカウト画面で生成したユニットデータを使う
+    let presetUnits = null;
+    if (STATE.mode === 'survival' && GAME.nextMatch) {
+        presetUnits = GAME.nextMatch.units;
+    }
+
+    roles.forEach((role, idx) => {
+        const slotId = `e_${role}`;
+        let eDef = { ...UNIT_DEFS[slotId] };
+        let selectedUnit = null;
+
+        if (presetUnits && presetUnits[idx]) {
+            selectedUnit = presetUnits[idx];
+        } else {
+            // データがない場合（練習モードなど）
+            let candidates = DB.units.filter(u => u.role === role.toUpperCase());
+            if (STATE.mode === 'practice') {
+                if (role === 'supp') candidates = [ DB.units.find(u => u.id === 'thislove') ];
+                if (role === 'atk')  candidates = [ DB.units.find(u => u.id === 'taki') ];
+                if (role === 'tank') candidates = [ DB.units.find(u => u.id === 'golden') ];
+            }
+            selectedUnit = candidates[Math.floor(Math.random() * candidates.length)];
+        }
+        
+        if (selectedUnit) {
+            document.getElementById(slotId).style.backgroundImage = `url('${selectedUnit.img}')`;
+            eDef.charId = selectedUnit.id;
+            if (selectedUnit.role) eDef.role = selectedUnit.role.toLowerCase();
+            if (selectedUnit.spd) eDef.castTime = selectedUnit.spd;
+
+            // ★レベル計算：渡されたレベルに基づいてステータスを強化
+            eDef.level = selectedUnit.level || 1;
+            
+            // ベース値の取得
+            let hp = selectedUnit.hp || eDef.hp;
+            let atk = selectedUnit.atk || eDef.atk;
+            
+            // レベル-1回分だけ1.3倍にする
+            for (let i = 1; i < eDef.level; i++) {
+                hp = Math.floor(hp * 1.3);
+                atk = Math.floor(atk * 1.3);
+            }
+            
+            // パッシブ効果 (HP UP) があれば更に上乗せ
+            if (BATTLE_STATE.enemyUpgrades.includes('u_hp')) {
+                hp = Math.floor(hp * 1.1);
+            }
+
+            eDef.hp = hp;
+            eDef.atk = atk;
+
+        } else {
+            document.getElementById(slotId).style.backgroundImage = `url('char_golden.png')`;
+            eDef.charId = 'golden';
+        }
+        BATTLE.spawn(slotId, eDef);
+    });
+
+    // 3. その他 (Mob, Boss)
+    [0, 1, 2].forEach(i => BATTLE.spawn(`mob_${i}`, UNIT_DEFS.mob));
+    document.getElementById('p_boss').style.backgroundImage = "url('boss.png')";
+    document.getElementById('e_boss').style.backgroundImage = "url('boss.png')";
+    
+    BATTLE_STATE.units['p_boss'] = { id:'p_boss', team:'p', max:3500, hp:3500, dead:false };
+    BATTLE_STATE.units['e_boss'] = { id:'e_boss', team:'e', max:3500, hp:3500, dead:false };
+    BATTLE_STATE.pCoreTimer = 2.0 + Math.random() * 3.0;
+    BATTLE_STATE.eCoreTimer = 2.0 + Math.random() * 3.0;
+  },
+
+
+
+  spawn: (id, def) => {
+    let hpMod = 1.0;
+    // ▼ 追加: HP_PATCH_v1.0 (味方HP +10%)
+    if (def.team === 'p' && STATE.inventory.upgrades.includes('u_hp')) {
+        hpMod = 1.1;
+    }
+
+    const maxHp = Math.floor(def.hp * hpMod);
+    
+    BATTLE_STATE.units[id] = {
+      id: id, ...def, max: maxHp, hp: maxHp,
+      
+      // ★ 変更：渡されたレベルがあればそれを使い、なければ1にする
+      lv: def.level || 1, 
+      
+      xp: 0, nxt: SPECS.xp_req,
+      // ... (以下略) ...
+      cd: 0, maxCd: 1, cast: 0, maxCast: 1, act: null, 
+      dead: false, rt: 0, buffs: [],
+      reserve: null, reservedCardIdx: null,
+
+  vulnStacks: 0 
+    };
+  },
+
+  fillHand: (idx) => {
+    if (BATTLE_STATE.hand[idx]) return;
+    
+    // Draw from Player Inventory (STATE.deck.cards)
+    let cardDef = null;
+    if (STATE.deck.cards.length > 0) {
+       const randId = STATE.deck.cards[Math.floor(Math.random() * STATE.deck.cards.length)];
+       cardDef = CARD_MAP[randId] || CARD_MAP['heal'];
+    } else {
+       // Fallback Deck
+       const defaults = Object.values(CARD_MAP);
+       cardDef = defaults[Math.floor(Math.random() * defaults.length)];
+    }
+
+    BATTLE_STATE.hand[idx] = { ...cardDef, idx: idx, cast: 0, maxCast: 1, reload: 0, maxReload: SPECS.cd.card_reload, reservedTarget: null }; 
+    const slot = document.getElementById(`slot-${idx}`);
+    if(!slot) return;
+    const old = slot.querySelector('.card'); if(old) old.remove();
+    const el = document.createElement('div');
+    el.className = `card`; el.innerText = cardDef.name;
+    el.style.borderColor = cardDef.type === 'atk' ? '#f05' : '#0ff';
+    el.style.color = cardDef.type === 'atk' ? '#f05' : '#0ff';
+    slot.appendChild(el);
+  },
+
+  fillEnemyHand: (idx) => {
+      // 敵のデッキ(BATTLE_STATE.enemyDeck)の中からランダムに引く
+      const deckIds = BATTLE_STATE.enemyDeck;
+
+      // エラー回避：もしデッキが空ならヒールを入れる
+      if (!deckIds || deckIds.length === 0) {
+          BATTLE_STATE.enemyHand[idx].cardId = 'heal'; 
+      } else {
+          const randId = deckIds[Math.floor(Math.random() * deckIds.length)];
+          BATTLE_STATE.enemyHand[idx].cardId = randId;
+      }
+      BATTLE_STATE.enemyHand[idx].reload = 0;
+  },
+
+
+  update: () => {
+    if (!BATTLE_STATE.running) return;
+
+    // ▼▼▼ 修正: 敵味方それぞれのレーザー速度設定 ▼▼▼
+    const pLaserSpd = STATE.inventory.upgrades.includes('u_laser_spd') ? 1.5 : 1.0;
+    // 敵もアップグレードを持っていれば速くなる
+    const eLaserSpd = BATTLE_STATE.enemyUpgrades.includes('u_laser_spd') ? 1.5 : 1.0;
+    
+    BATTLE_STATE.pCoreTimer -= 0.05 * pLaserSpd;
+    if (BATTLE_STATE.pCoreTimer <= 0) { BATTLE.fireCoreBit('p'); BATTLE_STATE.pCoreTimer = 6.0 + Math.random() * 4.0; }
+
+    // ★敵のタイマーにも倍率を適用
+    BATTLE_STATE.eCoreTimer -= 0.05 * eLaserSpd;
+    if (BATTLE_STATE.eCoreTimer <= 0) { BATTLE.fireCoreBit('e'); BATTLE_STATE.eCoreTimer = 6.0 + Math.random() * 4.0; }
+
+    // ▼▼▼ 修正: CD短縮とATK速度の設定 ▼▼▼
+    const pCdMod = STATE.inventory.upgrades.includes('u_cd') ? 1.1 : 1.0;
+    const eCdMod = BATTLE_STATE.enemyUpgrades.includes('u_cd') ? 1.1 : 1.0;
+    
+    const pAtkMod = STATE.inventory.upgrades.includes('u_atk') ? 1.2 : 1.0;
+    const eAtkMod = BATTLE_STATE.enemyUpgrades.includes('u_atk') ? 1.2 : 1.0;
+
+    Object.values(BATTLE_STATE.units).forEach(u => {
+      if (u.dead) { u.rt -= 0.05; if (u.rt <= 0) BATTLE.revive(u); return; }
+
+      let speedMod = 1.0;
+      if (u.buffs && u.buffs.length > 0) {
+          u.buffs.forEach(b => b.time -= 0.05);
+          const juice = u.buffs.find(b => b.type === 'juice');
+          if (juice) speedMod = juice.val;
+          u.buffs = u.buffs.filter(b => b.time > 0);
+      }
+
+      // ▼▼▼ 修正: CD短縮をチームごとに適用 ▼▼▼
+      let finalCdSpeed = speedMod;
+      if (u.team === 'p') finalCdSpeed *= pCdMod; 
+      if (u.team === 'e') finalCdSpeed *= eCdMod; // ★敵にも適用
+
+      if (u.cd > 0) {
+        u.cd -= 0.05 * finalCdSpeed;
+        if (u.cd <= 0) {
+           u.cd = 0;
+           if (u.reserve) {
+             const t = BATTLE_STATE.units[u.reserve.tid];
+             if (t && !t.dead) { BATTLE.setAction(u, u.reserve.tid); }
+             u.reserve = null;
+           }
+        }
+      }
+      if (u.shieldTime > 0) { u.shieldTime -= 0.05; if (u.shieldTime <= 0) u.hasShield = false; }
+// 修正前
+// if (u.vulnTime > 0) { u.vulnTime -= 0.05; if (u.vulnTime <= 0) u.vuln = false; }
+
+// ▼▼▼ 修正後：時間切れでスタックもリセット ▼▼▼
+if (u.vulnTime > 0) { 
+    u.vulnTime -= 0.05; 
+    if (u.vulnTime <= 0) {
+        u.vuln = false;
+        u.vulnStacks = 0; // スタックも0に戻す
+    }
+}
+// ▲▲▲ 修正ここまで ▲▲▲
+
+
+      // ▼▼▼ 修正: 詠唱速度(ATK)をチームごとに適用 ▼▼▼
+      let finalCastSpeed = speedMod;
+      if (u.role === 'atk') {
+          if (u.team === 'p') finalCastSpeed *= pAtkMod;
+          if (u.team === 'e') finalCastSpeed *= eAtkMod; // ★敵にも適用
+      }
+      
+      if (u.cast > 0) { u.cast -= 0.05 * finalCastSpeed; if (u.cast <= 0) BATTLE.commit(u); }
+    });
+
+    // ▼ 追加: QUICK_LOADER (カードリロード短縮 20% = 速度1.25倍)
+    // ※ここはプレイヤーの手札だけなので変更なし
+    const reloadSpd = STATE.inventory.upgrades.includes('u_quick') ? 1.25 : 1.0;
+
+        BATTLE_STATE.hand.forEach((c, i) => {
+      if (!c) return;
+
+      // ★追加：QUICK等の「予約中(reservedTargetあり)」カードの救済処理
+      if (c.reservedTarget) {
+          const u = BATTLE_STATE.units[c.reservedTarget];
+          // ターゲットが「存在しない」「死んでいる」「詠唱していない（スタン等で中断された）」場合
+          if (!u || u.dead || u.cast <= 0) {
+              // 予約を強制解除して、また使えるように戻す
+              c.reservedTarget = null;
+          }
+      }
+
+      if (c.cast > 0) { c.cast -= 0.05; if (c.cast <= 0) BATTLE.commitCard(c); }
+      if (c.reload > 0) { c.reload -= 0.05 * reloadSpd; if (c.reload <= 0) { BATTLE_STATE.hand[i] = null; BATTLE.fillHand(i); } }
+    });
+    
+    // (敵のロジック省略) の部分を以下に差し替え
+    ['e_atk','e_tank','e_supp'].forEach((uid, idx) => {
+      const u = BATTLE_STATE.units[uid];
+      if (!u || u.dead || u.cd > 0 || u.cast > 0) {
+          u.aiWait = null; // 動作中ならリセット
+          return;
+      }
+
+      // ■ 思考時間（AI Wait）の管理
+      if (u.aiWait === null || u.aiWait === undefined) {
+          // ▼▼▼ 修正：全ステージ共通の設定 ▼▼▼
+          // 20フレーム = 1秒 (updateは50ms間隔)
+          // 常に 0.5秒 ～ 2.0秒 の間でランダムに迷うようにする
+          let minWait = 10; 
+          let maxWait = 40; 
+
+          // ※もし難易度「OMG」でプレイしていて「速すぎる」と感じる場合は
+          // ここの数値を minWait = 10; maxWait = 30; くらいに調整してください
+          if (BATTLE_STATE.difficulty === 'hard') { minWait = 5; maxWait = 20; }
+          if (BATTLE_STATE.difficulty === 'omg')  { minWait = 2; maxWait = 10; }
+          
+          u.aiWait = minWait + Math.floor(Math.random() * (maxWait - minWait));
+      }
+
+      // 思考中...
+      if (u.aiWait > 0) {
+          u.aiWait--;
+          return; 
+      }
+
+      // 思考完了！攻撃を実行
+      BATTLE.runEnemyLogic(u, idx);
+      u.aiWait = null;
+    });
+
+    BATTLE_STATE.enemyHand.forEach((slot, idx) => {
+      if (slot.reload > 0) { slot.reload -= 0.05; if (slot.reload <= 0) { slot.reload = 0; BATTLE.fillEnemyHand(idx); } }
+      if (slot.act && slot.cast > 0) { slot.cast -= 0.05; if (slot.cast <= 0) BATTLE.commitEnemyCard(slot, idx); } 
+      else if (slot.cd > 0) { slot.cd -= 0.05; } 
+      else if (slot.reload <= 0) { BATTLE.enemyCardAI(idx); }
+    });
+    
+  },
+
+
+  fireCoreBit: (team) => {
+      // ターゲット選定ロジック
+      const mobs = ['mob_0', 'mob_1', 'mob_2'].filter(id => !BATTLE_STATE.units[id].dead);
+      let targets = [...mobs];
+      
+      // ▼ 追加: TARGET_UNLOCK (敵キャラも狙う)
+      if (team === 'p' && STATE.inventory.upgrades.includes('u_laser2')) {
+          ['e_atk','e_tank','e_supp'].forEach(id => {
+              const u = BATTLE_STATE.units[id];
+              if(u && !u.dead) targets.push(id);
+          });
+      }
+
+      // ▼ 追加: REPAIR_PROTOCOL (味方を回復するレーザーを確率で撃つ)
+      if (team === 'p' && STATE.inventory.upgrades.includes('u_heal_laser') && Math.random() < 0.4) {
+          // 味方でHPが減っているキャラを探す
+          const injured = ['p_atk','p_tank','p_supp'].filter(id => {
+              const u = BATTLE_STATE.units[id]; return u && !u.dead && u.hp < u.max;
+          });
+          if (injured.length > 0) {
+              const tId = injured[Math.floor(Math.random() * injured.length)];
+              BATTLE_DRAW.fireBit('p_boss', tId, '#0f0', () => {
+                 BATTLE.heal(BATTLE_STATE.units[tId], 50); 
+              });
+              return; // 攻撃はしない
+          }
+      }
+
+      if (targets.length === 0) return;
+      const targetId = targets[Math.floor(Math.random() * targets.length)];
+      const sourceId = team === 'p' ? 'p_boss' : 'e_boss';
+      const color = team === 'p' ? '#0ff' : '#f05';
+      
+      BATTLE_DRAW.fireBit(sourceId, targetId, color, () => {
+          const m = BATTLE_STATE.units[targetId];
+          if(m && !m.dead) { 
+              BATTLE.damage(m, 80, BATTLE_STATE.units[sourceId]); 
+              SOUND.play('bit'); 
+          }
+      });
+  },
+
+  runEnemyLogic: (u, idx) => {
+    // データ取得
+    const allies = ['e_atk', 'e_tank', 'e_supp'].map(id => BATTLE_STATE.units[id]).filter(a => a && !a.dead);
+    const players = ['p_atk', 'p_tank', 'p_supp'].map(id => BATTLE_STATE.units[id]).filter(p => p && !p.dead);
+    const mobs = ['mob_0', 'mob_1', 'mob_2'].map(id => BATTLE_STATE.units[id]).filter(m => m && !m.dead);
+    
+    // 全ての有効なターゲット候補（モブ＋プレイヤー＋プレイヤーコア）
+    let candidates = [...mobs.map(m=>m.id), ...players.map(p=>p.id), 'p_boss'];
+
+    // 優先ターゲット（これを設定すると確定）
+    let priorityTarget = null;
+
+    // ------------------------------------------------
+    // ■ キャラクター固有ロジック
+    // ------------------------------------------------
+
+    // 1. Taki: モブのラストヒットを狙う
+    if (u.charId === 'taki') {
+        // モブへのダメージは2倍なので、(現在のHP <= 攻撃力*2) のモブを探す
+        const killableMob = mobs.find(m => m.hp <= u.atk * 2.0);
+        if (killableMob) priorityTarget = killableMob.id;
+    }
+
+    // 2. However: Lv3になるまでコアを狙わない
+    else if (u.charId === 'however') {
+        const pBossHp = BATTLE_STATE.units['p_boss'].hp;
+        // レベル3未満、かつ敵コアHPが十分あるなら、候補からp_bossを外す
+        if (u.lv < 3 && pBossHp > 500) {
+            candidates = candidates.filter(id => id !== 'p_boss');
+        }
+    }
+
+    // 3. This love: 味方が攻撃動作に入ったら、ランダムな敵をスタンさせにいく
+    else if (u.charId === 'thislove') {
+        // 自分以外の味方が詠唱中か？
+        const allyCasting = allies.some(a => a.id !== u.id && a.cast > 0);
+        if (allyCasting && players.length > 0) {
+            // ランダムなプレイヤーを狙う
+            priorityTarget = players[Math.floor(Math.random() * players.length)].id;
+        }
+    }
+
+    // 4. Cheerleader: CD中の敵を狙う
+    else if (u.charId === 'cheer') {
+        const cdPlayer = players.find(p => p.cd > 0);
+        if (cdPlayer) priorityTarget = cdPlayer.id;
+    }
+
+    // 5. Golden: 狙われている味方にバリア (味方タゲ)
+    else if (u.charId === 'golden') {
+        // プレイヤーの誰かから狙われている味方を探す（★修正：自分以外）
+        const threatened = allies.find(a => a.id !== u.id && players.some(p => p.act && p.act.tid === a.id));
+        if (threatened) {
+            BATTLE.setAction(u, threatened.id); // setActionで即時実行
+            return;
+        }
+    }
+
+    // 6. Old town road: HP60%以下の味方を回復 (味方タゲ)
+    else if (u.charId === 'oldtown') {
+        // （★修正：自分以外で、HPが減っている味方）
+        const injured = allies.find(a => a.id !== u.id && a.hp < a.max * 0.6);
+        if (injured) {
+            BATTLE.setAction(u, injured.id);
+            return;
+        }
+    }
+
+    // 7. Wata: 序盤(Lv3未満)は積極的に味方を殴って育成 (味方タゲ)
+    else if (u.charId === 'wata') {
+        // （★修正：自分以外で、Lv3未満の味方）
+        const lowLvAlly = allies.find(a => a.id !== u.id && a.lv < 3); 
+        if (lowLvAlly) {
+            BATTLE.setAction(u, lowLvAlly.id);
+            return;
+        }
+    }
+
+
+    // ▼▼▼ 追加：サバイバル終盤(残り50秒)＆負けてるなら、戦術を捨ててコア特攻 ▼▼▼
+    if (STATE.mode === 'survival' && BATTLE_STATE.time <= 50) {
+        const eHP = BATTLE_STATE.units['e_boss'].hp;
+        const pHP = BATTLE_STATE.units['p_boss'].hp;
+        
+        // 自分のHPが相手より低い（負けている）場合
+        if (eHP < pHP) {
+            // 他の優先順位（モブ狙いや弱った敵狙いなど）を全て無視してコアを狙う
+            priorityTarget = 'p_boss';
+        }
+    }
+    // ▲▲▲ 追加ここまで ▲▲▲
+
+    // ------------------------------------------------
+    // ■ 全体共有ロジック (PoPデバフへのフォーカスなど)
+    // ------------------------------------------------
+    
+    // PoPまたは味方が付与した「WEAK(vuln)」状態の敵がいれば最優先
+    if (!priorityTarget) {
+        // 弱体化中のプレイヤーかモブを探す
+        const weakUnit = [...players, ...mobs].find(t => t.vuln);
+        if (weakUnit) priorityTarget = weakUnit.id;
+    }
+
+    // ------------------------------------------------
+    // ■ アクション実行
+    // ------------------------------------------------
+
+    if (priorityTarget) {
+        BATTLE.setAction(u, priorityTarget);
+    } else {
+        // 特になければ候補からランダム、または標準的な動き
+        // (コアを殴る確率は状況によるが、ここでは簡易的に候補からランダム)
+        if (candidates.length > 0) {
+            const finalTid = candidates[Math.floor(Math.random() * candidates.length)];
+            BATTLE.setAction(u, finalTid);
+        } else {
+            // 候補なしならとりあえずボス
+            BATTLE.setAction(u, 'p_boss');
+        }
+    }
+  },
+
+  enemyCardAI: (slotIdx) => {
+    const slot = BATTLE_STATE.enemyHand[slotIdx];
+    if (slot.act || slot.reload > 0 || !slot.cardId) return; 
+
+    // ▼▼▼ 追加：もう片方のスロットが詠唱中なら待機する（同時発動防止） ▼▼▼
+    const otherIdx = slotIdx === 0 ? 1 : 0;
+    const otherSlot = BATTLE_STATE.enemyHand[otherIdx];
+    if (otherSlot && (otherSlot.act || otherSlot.cast > 0)) return;
+
+    // ▼▼▼ 修正：難易度ごとの思考頻度調整（溜めを作る） ▼▼▼
+    // updateは50ms毎に走るため、確率はかなり低く設定しないとすぐ撃ってしまいます
+    let threshold = 0.995; // Normal: 0.5% (約2〜4秒に1回)
+
+    if (BATTLE_STATE.difficulty === 'easy') threshold = 0.998; // Easy: 0.2% (かなり遅い)
+    if (BATTLE_STATE.difficulty === 'hard') threshold = 0.985; // Hard: 1.5%
+    // OMGは制限なし（即撃ち）
+
+    if (BATTLE_STATE.difficulty !== 'omg' && Math.random() < threshold) return; 
+
+    const cardId = slot.cardId;
+    let targetId = null;
+    // ... (以下のロジックはそのまま
+
+    // 生存ユニット取得
+    const allies = ['e_atk', 'e_tank', 'e_supp'].map(id => BATTLE_STATE.units[id]).filter(u => u && !u.dead);
+    const players = ['p_atk', 'p_tank', 'p_supp'].map(id => BATTLE_STATE.units[id]).filter(u => u && !u.dead);
+    const mobs = ['mob_0', 'mob_1', 'mob_2'].map(id => BATTLE_STATE.units[id]).filter(u => u && !u.dead);
+
+    // ▼ RAGE: 攻撃力の高いキャラへ
+    if (cardId === 'rage') {
+        if (allies.length > 0) {
+            allies.sort((a, b) => b.atk - a.atk);
+            targetId = allies[0].id;
+        }
+    }
+    
+    // ▼ JUICE / GROW: ランダム
+    else if (cardId === 'juice' || cardId === 'grow') {
+        if (allies.length > 0) targetId = allies[Math.floor(Math.random() * allies.length)].id;
+    }
+
+    // ▼ QUICK: ランダムなキャラがボスを殴って、そのキャラに使う
+    else if (cardId === 'quick') {
+        if (allies.length > 0) {
+            const actor = allies[Math.floor(Math.random() * allies.length)];
+            // 強制的にボス攻撃命令をセット
+            BATTLE.setAction(actor, 'p_boss'); 
+            targetId = actor.id;
+        }
+    }
+
+    // ▼ HEAL: HPが減ってるキャラ or 空撃ち
+    else if (cardId === 'heal') {
+        const injured = allies.find(u => u.hp < u.max * 0.8);
+        if (injured) targetId = injured.id;
+        else if (allies.length > 0) targetId = allies[Math.floor(Math.random() * allies.length)].id;
+    }
+
+    // ▼ SHIELD: プレイヤーから狙われている味方 or 空撃ち
+    else if (cardId === 'shld') {
+        const targetedAlly = allies.find(a => players.some(p => p.act && p.act.tid === a.id));
+        if (targetedAlly) targetId = targetedAlly.id;
+        else if (allies.length > 0) targetId = allies[Math.floor(Math.random() * allies.length)].id;
+    }
+
+    // ▼ LilSTUN: プレイヤーの予備動作(cast > 0)に合わせて
+    else if (cardId === 'lstun') {
+        const castingPlayer = players.find(p => p.cast > 0);
+        if (castingPlayer) targetId = castingPlayer.id;
+    }
+
+    // ▼ BOM: 味方が死なない OR 味方が死んでもプレイヤーを複数倒せる
+    else if (cardId === 'bom') {
+        const lv = BATTLE_STATE.enemyCardLevels[cardId] || 1;
+        const dmgVals = [30, 60, 90]; 
+        const bomDmg = dmgVals[lv - 1] || 30;
+
+        const allyDeaths = allies.filter(a => a.hp <= bomDmg).length;
+        
+        // ★修正：ここでプレイヤー側の死亡数も計算する
+        const playerDeaths = players.filter(p => p.hp <= bomDmg).length;
+
+        // 味方被害なし、または 特攻（敵2体以上道連れ）
+        if (allyDeaths === 0 || playerDeaths >= 2) {
+             targetId = 'p_tank'; 
+        }
+    }
+
+    // ▼ FEED: モブのラストヒット妨害 or 空撃ち
+    else if (cardId === 'feed') {
+        if (mobs.length > 0) {
+            const lowHpMob = mobs.find(m => m.hp < 100);
+            if (lowHpMob) targetId = lowHpMob.id;
+            else targetId = mobs[Math.floor(Math.random() * mobs.length)].id;
+        }
+    }
+
+    // 実行予約
+    if (targetId) {
+        slot.act = { tid: targetId }; 
+        slot.cardId = cardId; 
+        slot.cast = SPECS.cast.fast; 
+        slot.maxCast = SPECS.cast.fast;
+    }
+  },
+
+  commitEnemyCard: (slot, idx) => {
+      const cid = slot.cardId; const tid = slot.act.tid; const t = BATTLE_STATE.units[tid];
+      const cDef = Object.values(CARD_MAP).find(c => c.id === cid); const cName = cDef ? cDef.name : "CARD";
+      slot.act = null; slot.cardId = null;
+
+      // ▼▼▼ 追加: 敵のカードレベルに応じた性能を取得 ▼▼▼
+      const lv = BATTLE_STATE.enemyCardLevels[cid] || 1; // デフォルト1
+      const dbCard = DB.cards.find(x => x.id === cid);
+      const vals = dbCard ? dbCard.vals : [];
+      const valIndex = lv - 1; // 配列は0始まり
+      // ▲▲▲
+      
+      if (t) { 
+          // --- 防御・回復系 ---
+          if (cid === 'heal' && !t.dead) BATTLE.heal(t, SPECS.val.heal); // HEALは固定でOK
+          else if (cid === 'shld' && !t.dead) { BATTLE.applyShield(t, 5); BATTLE.heal(t, 100); }
+          else if (cid === 'grow' && !t.dead) {
+              const growVal = vals[valIndex] || 15;
+              BATTLE.addXp(t, growVal);
+          }
+          else if (cid === 'quick' && !t.dead) { t.cd = 0; }
+          
+          // --- バフ系 ---
+          else if (cid === 'rage' && !t.dead) { 
+              const rageVal = vals[valIndex] || 1.3;
+              t.buffs.push({ type: 'rage', val: rageVal, time: 10.0 });
+              BATTLE_DRAW.pop(t.id, "▲ RAGE", "red");
+          }
+          else if (cid === 'juice' && !t.dead) {
+              const juiceVal = vals[valIndex] || 1.3;
+              t.buffs.push({ type: 'juice', val: juiceVal, time: 10.0 });
+              BATTLE_DRAW.pop(t.id, "▲ JUICE", "orange");
+          }
+
+          // --- 攻撃・妨害系 ---
+    else if (cid === 'lstun') { // ★修正: c.id -> cid
+        // ▼▼▼ 修正：敵もプレイヤーと同様、予備動作中のみヒットさせる ▼▼▼
+        if (!t.dead && t.cast > 0) {
+            const duration = vals[valIndex] || 2.0; // ★敵側は lvIdx ではなく valIndex
+            
+            t.cast = 0; 
+            t.cd = duration; 
+            
+            BATTLE_DRAW.fxStun(t.id); SOUND.play('stun');
+            BATTLE_DRAW.pop(t.id, `<< STUN ${duration}s >>`, "yellow");
+        } else {
+            BATTLE_DRAW.pop(t.id, "MISS", "gray"); 
+            SOUND.play('cancel'); 
+        }
+        // ▲▲▲ 修正ここまで ▲▲▲
+    }
+    // ★重要：ここに謎の else { ... } が残っていたら削除してください。
+    // そのまま else if (cid === 'bom') へ繋げます。
+    
+    else if (cid === 'bom') {
+        const bomDmg = vals[valIndex] || 100;
+        Object.values(BATTLE_STATE.units).forEach(u => {
+            if (!u.dead && !u.id.includes('boss') && u.id !== 'e_boss') { 
+                BATTLE.damage(u, bomDmg, BATTLE_STATE.units['e_boss']); 
+            }
+        });
+        BATTLE_DRAW.screenShake(); SOUND.play('heavy_explode');
+    }
+          else if (cid === 'feed') {
+              if (!t.dead) { BATTLE.heal(t, 500); }
+          }
+
+          if(cid !== 'bom') { 
+              BATTLE_DRAW.pop('e_boss', `⚠️ ${cName} Lv.${lv}`, '#f05'); // レベルも表示
+              BATTLE_DRAW.flash('e_boss', tid, 'e');
+          } else {
+              BATTLE_DRAW.pop('e_boss', `⚠️ ${cName} Lv.${lv}`, '#f05'); 
+          }
+      }
+      
+      slot.reload = SPECS.cd.card_reload; slot.max = SPECS.cd.card_reload;
+  },
+
+  tick: () => {
+    if (!BATTLE_STATE.running) return;
+    BATTLE_STATE.time--;
+    const pHP = BATTLE_STATE.units.p_boss.hp, eHP = BATTLE_STATE.units.e_boss.hp;
+    if (Math.abs(pHP - eHP) > 500 && Math.random() < 0.4) {
+      const targetTeam = pHP > eHP ? 'p' : 'e';
+      const mobs = ['mob_0','mob_1','mob_2'].filter(id => !BATTLE_STATE.units[id].dead);
+      if (mobs.length > 0) {
+        const m = BATTLE_STATE.units[mobs[Math.floor(Math.random()*mobs.length)]];
+        const target = Object.values(BATTLE_STATE.units).find(u => u.team === targetTeam && !u.dead && u.role);
+        if (target) { BATTLE.damage(target, 50, null); BATTLE_DRAW.beam(m.id, target.id); BATTLE_DRAW.pop(m.id, "BEAM!", "red"); }
+      }
+    }
+    if (BATTLE_STATE.time <= 0) { BATTLE.showResult(pHP >= eHP ? 'win' : 'lose'); }
+  },
+
+  setAction: (u, tid) => {
+    if (u.id === tid) return;
+    if (!u || u.dead) return; 
+
+    const t = BATTLE_STATE.units[tid]; if (!t) return;
+    
+    // CD中や詠唱中の予約処理
+    if (u.cd > 0 || u.cast > 0) { 
+        u.reserve = { tid: tid }; 
+        SOUND.play('ready'); 
+        return; 
+    }
+    
+    u.act = { tid: tid };
+    let speed = 'atk';
+    if (u.role === 'tank' && (t.team === u.team || t.team === 'mob')) speed = 'fast';
+    if (u.role === 'supp' && t.team !== 'mob') speed = 'supp';
+    if (u.role !== 'tank' && t.team === 'mob') speed = 'mob';
+    if (t.id.includes('boss')) speed = 'atk';
+    
+    u.cast = SPECS.cast[speed]; 
+
+    // ▼▼▼ Pizza time: 全て予備動作 1.0秒 に固定 ▼▼▼
+    if (u.charId === 'pizza') {
+        u.cast = 1.0;
+    }
+    // ▲▲▲
+
+    u.maxCast = u.cast || 1; 
+  },
+
+  setCardAction: (c, tid) => {
+    // ★修正1: 'c.reservedTarget' を削除して、予約中でも通れるようにする
+    if (!c || c.cast > 0 || c.reload > 0) return;
+
+    // ★修正2: もし既に誰かを予約している状態で、新しい操作が来たら…
+    if (c.reservedTarget) {
+        // 同じ相手にもう一度ドラッグした場合は何もしない
+        if (c.reservedTarget === tid) return;
+
+        // 違う相手なら、古い相手の予約フラグを消去してあげる
+        const oldTarget = BATTLE_STATE.units[c.reservedTarget];
+        if (oldTarget && oldTarget.reservedCardIdx === c.idx) {
+            oldTarget.reservedCardIdx = null;
+        }
+        c.reservedTarget = null;
+        // これでフリーの状態になるので、下の処理で新しい相手に適用されます
+    }
+
+    const t = BATTLE_STATE.units[tid]; if (!t) return;
+    
+    // QUICKの予約処理 (ここはそのまま)
+    if (c.id === 'quick' && t.cast > 0) { t.reservedCardIdx = c.idx; c.reservedTarget = t.id; return; }
+
+
+    // ▼▼▼ 条件分岐を詳細化 ▼▼▼
+    
+    // 1. 味方専用 (BUFF / HEAL)
+    if (['heal','shld','quick','grow','rage','juice'].includes(c.id)) {
+        if (t.team !== 'p') return; 
+    }
+
+    // 2. LIL STUN (妨害)
+    if (c.id === 'lstun') {
+        // モブ、または IDに'boss'が含まれる場合(コア) は禁止
+        if (t.team === 'mob' || t.id.includes('boss')) return; 
+    }
+
+    // 3. BOM (全体攻撃)
+    if (c.id === 'bom') {
+        // コアへの空打ちは禁止（間違ってコアの上に落とさないように）
+        if (t.id.includes('boss')) return;
+    }
+
+    // 4. FEED (モブ専用)
+    if (c.id === 'feed') {
+        if (t.team !== 'mob') return; 
+    }
+    
+    // ▲▲▲ ここまで ▲▲▲
+
+    if (c.id === 'quick' && t.cast > 0) return; 
+    c.act = { tid: tid }; c.cast = SPECS.cast[c.speed]; c.maxCast = c.cast || 1; 
+  },
+
+  commit: (u) => {
+    const t = BATTLE_STATE.units[u.act.tid];
+    u.act = null;
+
+    // ターゲットが死んでたらミス
+    if (!t || t.dead) { 
+        u.cd = SPECS.cd.miss; u.maxCd = u.cd; 
+        BATTLE_DRAW.pop(u.id, "ERR: MISS", "gray"); 
+        return; 
+    }
+
+    // 共通エフェクト
+    BATTLE_DRAW.flashUnit(u.id); 
+    if (u.id !== 'however') BATTLE_DRAW.flash(u.id, t.id, u.team); 
+    SOUND.play('shoot');
+
+    // -----------------------------------------
+    // ■ 味方へのアクション (TANKのアビリティ)
+    // -----------------------------------------
+    if (u.team === t.team) {
+        let isSupportAction = false; // サポート行動を行ったかどうかのフラグ
+
+        if (u.charId === 'golden') {
+            // Golden: ガード
+            BATTLE.applyShield(t, 3); 
+            BATTLE_DRAW.pop(t.id, "[ GUARD ]", "#0ff");
+            SOUND.play('shield');
+            isSupportAction = true;
+        } 
+        else if (u.charId === 'oldtown') {
+            // Old town road: 回復
+            const healVal = 100 * u.lv;
+            BATTLE.heal(t, healVal); 
+            BATTLE_DRAW.flash(u.id, t.id, '#0f0');
+
+            isSupportAction = true;
+        } 
+        else if (u.charId === 'wata') {
+            // WATA: 経験値
+            const xpVal = 15 + (u.lv - 1) * 5;
+            BATTLE.addXp(t, xpVal); 
+            BATTLE_DRAW.pop(t.id, `▲ TEACH +${xpVal}`, "gold");
+            isSupportAction = true;
+        }
+        
+        // ★ここが変更点★
+        // サポート行動を行った場合のみ、ここで処理を終了する。
+        // PoPやCheerなど、サポート能力がないキャラが味方を殴った場合は、
+        // このif文を抜けて「下の敵判定（ダメージ＆デバフ処理）」に進む。
+        if (isSupportAction) {
+            u.cd = SPECS.cd.guard; 
+            u.maxCd = u.cd;
+            return; 
+        }
+    }
+
+    // -----------------------------------------
+    // ■ 攻撃アクション (敵、または味方への誤射)
+    // -----------------------------------------
+
+    
+    let val = u.atk;
+    if (u.charId === 'taki' && t.team === 'mob') { val *= 2.0; }
+
+    // 特殊効果 (This love, Cheerleeder, PoP, However...)
+    // This love は元々 !t.hasShield が入っているのでOK
+    if (u.charId === 'thislove' && t.cast > 0 && !t.hasShield) {
+        t.cast = 0; t.cd = 5.0; 
+        BATTLE_DRAW.fxStun(t.id); SOUND.play('stun');
+        BATTLE_DRAW.pop(t.id, "<< STUN >>", "yellow", true);
+    }
+
+    // ▼▼▼ 修正：CheerleaderとPoPの効果もシールドで防げるように条件追加 ▼▼▼
+    
+    // シールドがない場合のみ遅延させる (!t.hasShield を追加)
+    if (u.charId === 'cheer' && t.cd > 0 && !t.hasShield) {
+        t.cd += 3.0; t.maxCd += 3.0; 
+        BATTLE_DRAW.pop(t.id, "+3s DELAY", "violet", false, -30);
+    }
+
+// 修正前
+// if (u.charId === 'pop' && !t.hasShield) {
+//     t.vuln = true; t.vulnTime = 5.0; 
+//     BATTLE_DRAW.pop(t.id, "▼ WEAK", "magenta", false, -30);
+// }
+
+// ▼▼▼ 修正後：PoPの処理 (スタック管理) ▼▼▼
+if (u.charId === 'pop' && !t.hasShield) {
+    t.vuln = true; // AI判定用にフラグは残す
+    
+    // まだスタック変数がなければ0にする（念のため）
+    if (typeof t.vulnStacks === 'undefined') t.vulnStacks = 0;
+
+    // スタック加算（最大2）
+    if (t.vulnStacks < 2) {
+        t.vulnStacks++;
+    }
+    
+    // 時間をリセット（重ねがけで時間は延長される）
+    t.vulnTime = 5.0; 
+    
+    // 表示テキスト (2スタック目は x2 と表示)
+    const txt = t.vulnStacks === 2 ? "▼ WEAK x2" : "▼ WEAK";
+    BATTLE_DRAW.pop(t.id, txt, "magenta", false, -30);
+}
+// ▲▲▲ 修正ここまで ▲▲▲
+
+    // (前略... This love, Cheer, PoP の処理の後)
+
+    // ▼▼▼ 修正：Howeverのターゲット判定ロジック ▼▼▼
+    if (u.charId === 'however') {
+        
+        // パターンA: ターゲットが「ボス」の場合 → ボス単体のみ攻撃
+        if (t.id.includes('boss')) {
+            BATTLE.damage(t, val, u);
+        }
+        // パターンB: ターゲットが「ボス以外」の場合 → ボス以外のチーム全員を攻撃
+        else {
+            const targets = Object.values(BATTLE_STATE.units).filter(unit => 
+                unit.team === t.team && 
+                !unit.dead && 
+                !unit.id.includes('boss') // ここでボスを巻き添えから除外
+            );
+            
+            targets.forEach(subT => {
+                BATTLE_DRAW.flash(u.id, subT.id, u.team); 
+                BATTLE.damage(subT, val, u);
+            });
+        }
+    } 
+    else {
+        // その他のキャラは通常通りターゲット1体を攻撃
+        BATTLE.damage(t, val, u);
+    }
+    
+    // (後略... クールダウン設定など)
+
+    // クールダウン設定
+    if (t.team === 'mob') u.cd = SPECS.cd.mob_kill; 
+    else u.cd = t.id.includes('boss') ? SPECS.cd.boss : SPECS.cd.atk; 
+
+    // ▼▼▼ Pizza time: 全てCD 2.0秒 に固定 ▼▼▼
+    if (u.charId === 'pizza') {
+        u.cd = 3.0;
+    }
+    // ▲▲▲
+    
+    u.maxCd = u.cd;
+    
+    // Quick予約処理
+    if (typeof u.reservedCardIdx === 'number') {
+      const c = BATTLE_STATE.hand[u.reservedCardIdx];
+      if (c && c.id === 'quick' && c.reservedTarget === u.id) { 
+          u.reservedCardIdx = null; c.reservedTarget = null; 
+          c.act = { tid: u.id }; c.cast = SPECS.cast[c.speed]; c.maxCast = c.cast || 1; 
+      }
+    }
+  },
+
+  commitCard: (c) => {
+    const t = BATTLE_STATE.units[c.act.tid];
+    c.act = null; 
+    c.reload = SPECS.cd.card_reload;
+    const slot = document.getElementById(`slot-${c.idx}`); const cardEl = slot.querySelector('.card'); if (cardEl) cardEl.remove();
+
+    if (!t && c.id !== 'bom') return; 
+
+    if (c.id !== 'bom' && t) BATTLE_DRAW.flash(`slot-${c.idx}`, t.id, 'p');
+
+    // ▼▼▼ カードデータの取得（現在のレベル値を使うため） ▼▼▼
+    const dbCard = DB.cards.find(x => x.id === c.id);
+    const lvIdx = (dbCard && dbCard.level) ? dbCard.level - 1 : 0;
+    const vals = dbCard ? dbCard.vals : [];
+    // ▲▲▲
+
+    if (c.id === 'heal') { 
+        BATTLE.heal(t, SPECS.val.heal); 
+    }
+    else if (c.id === 'shld') { 
+        BATTLE.applyShield(t, 5); BATTLE.heal(t, 100); 
+    }
+    else if (c.id === 'quick') { 
+        t.cd = 0; BATTLE_DRAW.pop(t.id, ">> READY <<", "#0ff"); 
+        if (t.reserve) { BATTLE.setAction(t, t.reserve.tid); t.reserve = null; }
+    }
+    else if (c.id === 'grow') { 
+        // vals: [15, 25, 40]
+        const val = vals[lvIdx] || 15;
+        BATTLE.addXp(t, val); BATTLE_DRAW.pop(t.id, `▲ GROW +${val}`, "gold"); 
+    }
+    else if (c.id === 'rage') {
+        // vals: [1.3, 1.5, 1.7]
+        const val = vals[lvIdx] || 1.3;
+        t.buffs.push({ type: 'rage', val: val, time: 10.0 });
+        BATTLE_DRAW.pop(t.id, "▲ RAGE", "red");
+        BATTLE_DRAW.particles(t.id, "#f05");
+    }
+    else if (c.id === 'juice') {
+        // vals: [1.3, 1.5, 1.7]
+        const val = vals[lvIdx] || 1.3;
+        t.buffs.push({ type: 'juice', val: val, time: 10.0 });
+        BATTLE_DRAW.pop(t.id, "▲ JUICE", "orange");
+    }
+    else if (c.id === 'lstun') {
+        // ▼▼▼ 修正：予備動作(cast > 0)以外はMISSにする ▼▼▼
+        
+        // ターゲットが生きていて、かつ詠唱中(cast > 0)のみ成功
+        if (!t.dead && t.cast > 0) {
+             // vals: [2.0, 3.0, 4.0]
+             const duration = vals[lvIdx] || 2.0;
+             
+             // 詠唱を中断させ、CDを付与して固める
+             t.cast = 0; 
+             t.cd = duration; 
+             
+             BATTLE_DRAW.fxStun(t.id); SOUND.play('stun');
+             BATTLE_DRAW.pop(t.id, `<< STUN ${duration}s >>`, "yellow");
+        } else {
+             // 詠唱していない（棒立ち、CD中、攻撃後、死亡など）場合はミス
+             BATTLE_DRAW.pop(t.id, "MISS", "gray");
+             SOUND.play('cancel');
+        }
+        // ▲▲▲ 修正ここまで ▲▲▲
+    }
+    else if (c.id === 'feed') {
+        if (t.dead) {
+            BATTLE_DRAW.pop(t.id, "MISS", "gray");
+            SOUND.play('cancel');
+        } else {
+            BATTLE.heal(t, 500);
+            // (前回のご要望により削除済み) BATTLE_DRAW.pop(t.id, "♥ FEED", "pink");
+        }
+    }
+    else if (c.id === 'bom') {
+        // vals: [30, 60, 90]
+        const dmg = vals[lvIdx] || 30;
+        Object.values(BATTLE_STATE.units).forEach(u => {
+            if (!u.dead && !u.id.includes('boss')) {
+                BATTLE.damage(u, dmg, null);
+                // (前回のご要望により削除済み) BATTLE_DRAW.pop(u.id, "BOM!", "white");
+            }
+        });
+        BATTLE_DRAW.screenShake(); SOUND.play('heavy_explode');
+    }
+  },
+
+  damage: (t, val, src) => {
+    if (t.dead) return;
+    
+    // ▼ RAGEバフの計算
+    if (src && src.buffs) {
+        const rage = src.buffs.find(b => b.type === 'rage');
+        if (rage) val = Math.floor(val * rage.val);
+    }
+
+// 修正前
+// if (t.vuln) { val = Math.floor(val * 1.2); }
+
+// ▼▼▼ 修正後：1.5倍の累積計算 ▼▼▼
+if (t.vulnStacks > 0) {
+    // 1スタック: 1.5倍
+    // 2スタック: 1.5 * 1.5 = 2.25倍
+    const multiplier = Math.pow(1.5, t.vulnStacks);
+    val = Math.floor(val * multiplier);
+}
+// ▲▲▲ 修正ここまで ▲▲▲
+
+    if (t.id.includes('boss')) { val = Math.floor(val * 0.85); }
+    
+    if (t.hasShield) { t.hasShield = false; t.shieldTime = 0; BATTLE_DRAW.fxParry(t.id); SOUND.play('parry'); BATTLE_DRAW.pop(t.id, "/// PARRY ///", "#0ff", true); return; }
+    
+    BATTLE_DRAW.shake(t.id); SOUND.play('hit'); BATTLE_DRAW.pop(t.id, val, "#ff3355", false); 
+    t.hp -= val;
+    
+    if (t.hp <= 0) {
+      t.hp = 0; t.dead = true; t.act = null; t.cast = 0; t.reserve = null; t.buffs = [];
+      BATTLE_DRAW.particles(t.id, (t.team==='p'?'#0ff':(t.team==='e'?'#f05':'#0f0'))); 
+      if (t.team === 'mob') { SOUND.play('explode'); } else { SOUND.play('heavy_explode'); BATTLE_DRAW.screenShake(); BATTLE_DRAW.glitch(); }
+      if (t.id.includes('boss')) { BATTLE.showResult(t.team === 'e' ? 'win' : 'lose'); return; }
+      t.rt = SPECS.respawn[t.role] || SPECS.respawn.mob;
+      
+      if (t.team === 'mob' || t.team === 'e' || t.team === 'p') {
+        const xp = t.xp || 30;
+        if (src && src.id === 'p_boss') { 
+            const share = Math.floor(xp / 3); 
+            ['p_atk','p_tank','p_supp'].forEach(id => BATTLE.addXp(BATTLE_STATE.units[id], share)); 
+        }
+// 修正前
+else if (src && src.team === 'p') { 
+    BATTLE.addXp(src, xp); 
+    // ▼ 追加: CLOUD_SYNC (トドメ以外の味方にもXPが入る)
+    if (STATE.inventory.upgrades.includes('u_share_xp')) {
+        const shareVal = Math.floor(xp * 0.3); 
+        ['p_atk','p_tank','p_supp'].forEach(id => {
+            if (id !== src.id) BATTLE.addXp(BATTLE_STATE.units[id], shareVal);
+        });
+    }
+} 
+
+// ▼▼▼ 追加：敵チーム('e')も経験値を獲得できるようにする ▼▼▼
+else if (src && src.team === 'e') {
+    BATTLE.addXp(src, xp);
+}
+// ▲▲▲ 追加ここまで ▲▲▲
+
+      }
+      if (t.team === 'mob') { t.nextType = Math.random() < 0.1 ? 'elite' : (Math.random() < 0.4 ? 'buff' : 'norm'); }
+    }
+  },
+
+
+  heal: (t, val) => { t.hp = Math.min(t.max, t.hp + val); BATTLE_DRAW.pop(t.id, `+${val}`, "#0f0"); SOUND.play('heal'); },
+  applyShield: (t, dur) => { t.hasShield = true; t.shieldTime = dur; }, 
+
+  addXp: (u, val) => {
+    if (!u || u.dead || u.lv >= 10) return;
+
+    // ▼ 追加: DATA_HARVEST (XP獲得量 +20%)
+    if (u.team === 'p' && STATE.inventory.upgrades.includes('u_xp')) {
+        val = Math.floor(val * 1.2);
+    }
+
+    u.xp += val;
+    if (u.xp >= u.nxt) {
+      u.xp -= u.nxt; 
+      u.lv++; 
+      
+      // ▼▼▼ 修正：ATKだけ成長曲線を厳しくする ▼▼▼
+      let growthRate = 1.5; // 基本は1.5倍
+      
+      if (u.role === 'atk') {
+          growthRate = 2.0; // ATKは2.0倍（ここを増やすともっと厳しくなります）
+      }
+      
+      u.nxt = Math.floor(u.nxt * growthRate);
+      // ▲▲▲ 修正ここまで ▲▲▲
+
+      u.max = Math.floor(u.max * 1.3); u.atk = Math.floor(u.atk * 1.3); u.hp = u.max;
+      BATTLE_DRAW.pop(u.id, "▲ LEVEL UP", "#ffd700", true); SOUND.play('levelup'); BATTLE_DRAW.levelUpFx(u.id);
+    }
+  },
+
+  revive: (u) => {
+    u.dead = false; u.hp = u.max; u.rt = 0; u.act = null; u.cast = 0; u.cd = 0; u.reserve = null;
+    if (u.team === 'mob' && u.nextType) {
+      u.type = u.nextType; u.max = u.type==='elite' ? 500 : (u.type==='buff' ? 300 : 200); u.xp = u.type==='elite' ? 100 : (u.type==='buff' ? 60 : 30); u.hp = u.max;
+      const el = document.getElementById(u.id); el.className = `mob ${u.type}`;
+    }
+    BATTLE_DRAW.pop(u.id, "REVIVE", "white");
+  },
+  // 【新規追加】バトルを強制停止する
+  stop: () => {
+    BATTLE_STATE.running = false;
+    // ループ処理を確実に止める
+    if (BATTLE_STATE.loopId) clearInterval(BATTLE_STATE.loopId);
+    if (BATTLE_STATE.drawId) clearInterval(BATTLE_STATE.drawId);
+    if (BATTLE_STATE.tickId) clearInterval(BATTLE_STATE.tickId);
+
+    // ▼▼▼ 追加：画面に残った枠やゴーストを強制削除 ▼▼▼
+    document.querySelectorAll('.target-frame').forEach(el => el.remove());
+    document.querySelectorAll('.ghost').forEach(el => el.remove());
+    document.getElementById('drag-line').style.display = 'none';
+  },
+};
+
+const INPUT = {
+  handle: (e, type) => { if(type === 'start') INPUT.start(e); if(type === 'move') INPUT.move(e); if(type === 'end') INPUT.end(e); },
+  start: (e) => {
+    if (!BATTLE_STATE.running) return;
+    if (BATTLE_STATE.drag) {
+        if(BATTLE_STATE.drag.ghost) BATTLE_STATE.drag.ghost.remove();
+        document.getElementById('drag-line').style.display='none';
+        BATTLE_STATE.drag = null;
+    }
+    const t = e.changedTouches ? e.changedTouches[0] : e;
+    const target = document.elementFromPoint(t.clientX, t.clientY);
+    if (!target) return;
+    const box = target.closest('.box, .mob, .core, .slot');
+
+    let payload = null, srcEl = null;
+    if (!box) return;
+    if (box.classList.contains('box') && box.id.startsWith('p_')) { payload = { type: 'unit', id: box.id }; srcEl = box; } 
+    else if (box.classList.contains('slot') && !box.classList.contains('enemy')) {
+        const idx = parseInt(box.id.split('-')[1]); const card = BATTLE_STATE.hand[idx];
+        if (card && card.reload <= 0) { payload = { type: 'card', idx: idx }; srcEl = box.querySelector('.card') || box; }
+    }
+    if (!payload || !srcEl) return;
+    if (payload.type === 'unit') { const u = BATTLE_STATE.units[payload.id]; if(u.dead || u.cast > 0) return; }
+    e.preventDefault();
+    const rect = srcEl.getBoundingClientRect();
+    const ghost = srcEl.cloneNode(true); ghost.className = "ghost"; ghost.style.width = rect.width + 'px'; ghost.style.height = rect.height + 'px';
+    document.getElementById('layer-drag').appendChild(ghost);
+    BATTLE_STATE.drag = { payload, ghost, w: rect.width, h: rect.height };
+    INPUT.move(e);
+    const line = document.getElementById('drag-line'); line.setAttribute('x1', rect.left + rect.width/2); line.setAttribute('y1', rect.top + rect.height/2);
+  },
+  move: (e) => {
+    if (!BATTLE_STATE.drag) return;
+    e.preventDefault();
+    const t = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+    const x = t.clientX; const y = t.clientY;
+    const g = BATTLE_STATE.drag.ghost;
+    g.style.left = (x - BATTLE_STATE.drag.w/2) + 'px'; g.style.top = (y - BATTLE_STATE.drag.h/2) + 'px';
+    const line = document.getElementById('drag-line'); 
+    line.style.display = 'block';
+    line.setAttribute('x2', x); line.setAttribute('y2', y);
+    document.querySelectorAll('.highlight').forEach(el=>el.classList.remove('highlight'));
+    const tid = INPUT.getHit(x, y);
+    if (tid) { const el = document.getElementById(tid); if (el) el.classList.add('highlight'); }
+  },
+  end: (e) => {
+    if (!BATTLE_STATE.drag) return;
+    const t = e.changedTouches ? e.changedTouches[0] : e;
+    if(BATTLE_STATE.drag.ghost) BATTLE_STATE.drag.ghost.remove(); 
+    document.getElementById('drag-line').style.display='none'; document.querySelectorAll('.highlight').forEach(el=>el.classList.remove('highlight'));
+    const tid = INPUT.getHit(t.clientX, t.clientY);
+    
+    if (tid) {
+      // ターゲットの上で離した場合（実行・予約）
+      if (BATTLE_STATE.drag.payload.type === 'unit') BATTLE.setAction(BATTLE_STATE.units[BATTLE_STATE.drag.payload.id], tid);
+      else BATTLE.setCardAction(BATTLE_STATE.hand[BATTLE_STATE.drag.payload.idx], tid);
+    } else {
+      // 何もない場所で離した場合（キャンセル処理）
+      
+      // 1. ユニットの予約キャンセル
+      if (BATTLE_STATE.drag.payload.type === 'unit') { 
+          const u = BATTLE_STATE.units[BATTLE_STATE.drag.payload.id]; 
+          if (u && u.reserve) { 
+              u.reserve = null; 
+              BATTLE_DRAW.pop(u.id, "CANCEL", "gray"); 
+              SOUND.play('cancel'); 
+          } 
+      }
+      
+      // ▼▼▼ 追加: カード(Quick)の予約キャンセル ▼▼▼
+      else if (BATTLE_STATE.drag.payload.type === 'card') {
+          const c = BATTLE_STATE.hand[BATTLE_STATE.drag.payload.idx];
+          // もしカードが予約中(reservedTargetあり)なら解除
+          if (c && c.reservedTarget) {
+              const tUnit = BATTLE_STATE.units[c.reservedTarget];
+              
+              // ユニット側の予約フラグも消す
+              if (tUnit && tUnit.reservedCardIdx === c.idx) {
+                  tUnit.reservedCardIdx = null;
+              }
+              c.reservedTarget = null;
+              
+              BATTLE_DRAW.pop(`slot-${c.idx}`, "CANCEL", "gray");
+              SOUND.play('cancel');
+          }
+      }
+      // ▲▲▲ 追加ここまで ▲▲▲
+    }
+    BATTLE_STATE.drag = null;
+  },
+  getHit: (x, y) => {
+    const candidates = [...Object.keys(BATTLE_STATE.units)];
+    for (let id of candidates) {
+      if (id === 'p_boss') continue;
+      const el = document.getElementById(id); if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return id;
+    }
+    return null;
+  }
+};
+
+const BATTLE_DRAW = {
+  curvedLine: (fromId, toId, team, pct, isReserve = false) => {
+    const f = document.getElementById(fromId); const t = document.getElementById(toId);
+    if(!f || !t) return;
+    const r1 = f.getBoundingClientRect(); const r2 = t.getBoundingClientRect();
+    const x1 = r1.left + r1.width/2; const y1 = r1.top + r1.height/2;
+    const x2 = r2.left + r2.width/2; const y2 = r2.top + r2.height/2;
+    const midX = (x1 + x2) / 2; const midY = (y1 + y2) / 2;
+    const dx = x2 - x1; const dy = y2 - y1;
+    const offsetX = -dy * 0.2; const offsetY = dx * 0.2; 
+    const cx = midX + offsetX; const cy = midY + offsetY;
+    const pathData = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    const svg = document.getElementById('layer-lines');
+    let isBoss = toId.includes('boss'); let typeClass = isBoss ? 'boss' : (toId.includes('mob') ? 'mob' : '');
+
+    if (!isReserve) {
+      const base = document.createElementNS('http://www.w3.org/2000/svg','path');
+      base.setAttribute('d', pathData); base.setAttribute('class', `path-base ${team}`);
+      svg.appendChild(base);
+    }
+    const gauge = document.createElementNS('http://www.w3.org/2000/svg','path');
+    gauge.setAttribute('d', pathData);
+    if (isReserve) { gauge.setAttribute('class', `path-reserve`); } 
+    else {
+      gauge.setAttribute('class', `path-gauge ${team} ${typeClass}`);
+      const len = Math.hypot(dx, dy) * 1.2; 
+      gauge.style.strokeDasharray = `${len * pct} ${len}`;
+      if (pct < 1.0) gauge.style.strokeDasharray = `${len * pct} ${len + 300}`;
+      if (isBoss) {
+        const core = document.createElementNS('http://www.w3.org/2000/svg','path');
+        core.setAttribute('d', pathData); core.setAttribute('class', 'path-boss-core');
+        core.style.strokeDasharray = `${len * pct} ${len}`; svg.appendChild(core);
+      }
+    }
+    svg.appendChild(gauge);
+  },
+  
+  markTarget: (tid, team) => {
+    const el = document.getElementById(tid); if (!el) return;
+    const r = el.getBoundingClientRect();
+    const frame = document.createElement('div');
+    frame.className = 'target-frame'; frame.style.color = team === 'p' ? '#0ff' : '#f05';
+    frame.style.left = (r.left + r.width/2 - 30) + 'px'; frame.style.top = (r.top + r.height/2 - 30) + 'px';
+    const tl = document.createElement('div'); tl.className = 'tf-c tf-tl';
+    const tr = document.createElement('div'); tr.className = 'tf-c tf-tr';
+    const bl = document.createElement('div'); bl.className = 'tf-c tf-bl';
+    const br = document.createElement('div'); br.className = 'tf-c tf-br';
+    frame.appendChild(tl); frame.appendChild(tr); frame.appendChild(bl); frame.appendChild(br);
+    document.body.appendChild(frame);
+  },
+  
+  flash: (fromId, toId, team) => {
+    const f = document.getElementById(fromId); const t = document.getElementById(toId); if(!f || !t) return;
+    const r1 = f.getBoundingClientRect(); const r2 = t.getBoundingClientRect();
+    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1', r1.left + r1.width/2); l.setAttribute('y1', r1.top + r1.height/2);
+    l.setAttribute('x2', r2.left + r2.width/2); l.setAttribute('y2', r2.top + r2.height/2);
+    l.setAttribute('class', `flash`); l.style.stroke = team === 'p' ? '#0ff' : '#f05';
+    document.getElementById('layer-lines').appendChild(l); setTimeout(() => l.remove(), 500);
+  },
+  flashUnit: (id) => {
+    const el = document.getElementById(id);
+    if(el) { el.classList.add('active-flash'); setTimeout(()=>el.classList.remove('active-flash'), 100); }
+  },
+  beam: (fromId, toId) => { BATTLE_DRAW.flash(fromId, toId, 'e'); },
+  
+  pop: (id, txt, color, isCrit = false, yOffset = 0) => { // ★引数 yOffset を追加
+    const el = document.getElementById(id); if(!el) return;
+    const p = document.createElement('div');
+    p.innerText = txt; p.className = isCrit ? 'pop crit' : 'pop'; p.style.color = color;
+    const rx = (Math.random() - 0.5) * 60; p.style.setProperty('--rx', rx + 'px');
+    const r = el.getBoundingClientRect(); 
+    p.style.left = (r.left + r.width/2) + 'px'; 
+    
+    // ★修正：yOffset を足して位置を調整可能に
+    p.style.top = (r.top + yOffset) + 'px'; 
+    
+    document.body.appendChild(p); setTimeout(() => p.remove(), isCrit ? 1200 : 1000);
+  },
+  
+  shake: (id) => { const el = document.getElementById(id); if(el) { el.classList.remove('shaking'); void el.offsetWidth; el.classList.add('shaking'); } },
+  screenShake: () => { document.body.classList.remove('shake-screen'); void document.body.offsetWidth; document.body.classList.add('shake-screen'); },
+  glitch: () => { document.body.classList.remove('glitch-active'); void document.body.offsetWidth; document.body.classList.add('glitch-active'); },
+
+  levelUpFx: (id) => {
+    const el = document.getElementById(id); if (!el) return;
+    const r = el.getBoundingClientRect();
+    const overlay = document.createElement('div'); overlay.className = 'fx-lvup-overlay'; el.appendChild(overlay); setTimeout(() => overlay.remove(), 300);
+    const ring = document.createElement('div'); ring.className = 'fx-lvup-ring'; el.appendChild(ring); setTimeout(() => ring.remove(), 600);
+    for(let i=0; i<15; i++) {
+      const p = document.createElement('div'); p.className = 'particle'; p.style.backgroundColor = '#ffd700'; 
+      p.style.left = (r.left + r.width/2) + 'px'; p.style.top = (r.top + r.height/2) + 'px';
+      const angle = Math.random() * Math.PI * 2; const dist = 30 + Math.random() * 40;
+      p.style.setProperty('--tx', Math.cos(angle) * dist + 'px'); p.style.setProperty('--ty', (Math.sin(angle) * dist - 50) + 'px');
+      document.body.appendChild(p); setTimeout(()=>p.remove(), 800);
+    }
+  },
+
+  particles: (id, color) => {
+    const el = document.getElementById(id); if (!el) return;
+    const r = el.getBoundingClientRect(); const cx = r.left + r.width/2; const cy = r.top + r.height/2;
+    for(let i=0; i<8; i++) {
+      const p = document.createElement('div'); p.className = 'particle'; p.style.backgroundColor = color;
+      p.style.left = cx + 'px'; p.style.top = cy + 'px';
+      const angle = Math.random() * Math.PI * 2; const dist = 50 + Math.random() * 50;
+      p.style.setProperty('--tx', Math.cos(angle) * dist + 'px'); p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+      document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
+    }
+  },
+
+  fireBit: (fromId, toId, color, onHit) => {
+    const f = document.getElementById(fromId); const t = document.getElementById(toId); if(!f || !t) return;
+    const r1 = f.getBoundingClientRect(); const r2 = t.getBoundingClientRect();
+    const bit = document.createElement('div'); bit.className = 'bit';
+    bit.style.left = (r1.left + r1.width/2 - 4) + 'px'; bit.style.top = (r1.top + r1.height/2 - 4) + 'px'; bit.style.color = color;
+    document.body.appendChild(bit);
+    requestAnimationFrame(() => { bit.style.transform = `translate(${r2.left - r1.left}px, ${r2.top - r1.top}px)`; });
+    setTimeout(() => { bit.remove(); if(onHit) onHit(); }, 1200); 
+  },
+
+  fxParry: (id) => {
+    const el = document.getElementById(id); if (!el) return;
+    const cross = document.createElement('div'); cross.className = 'fx-cross'; el.appendChild(cross); setTimeout(() => cross.remove(), 200);
+    const overlay = document.createElement('div'); overlay.className = 'fx-white-overlay'; el.appendChild(overlay); setTimeout(() => overlay.remove(), 150);
+  },
+
+  fxStun: (id) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.classList.add('fx-glitch-target'); setTimeout(() => el.classList.remove('fx-glitch-target'), 600);
+    const thunder = document.createElement('div'); thunder.className = 'fx-thunder'; el.appendChild(thunder); setTimeout(() => thunder.remove(), 300);
+    for(let i=0; i<3; i++) {
+      const s = document.createElement('div'); s.className = 'fx-spark'; s.style.setProperty('--r', (Math.random()*360)+'deg');
+      el.appendChild(s); setTimeout(() => s.remove(), 350);
+    }
+  },
+
+  // BATTLE_DRAW オブジェクト内に追加してください
+
+  victoryConfetti: () => {
+    // 画面中央から大量のパーティクルを爆発させる
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const colors = ['#0ff', '#f05', '#ffd700', '#fff']; // ネオンカラー + 金
+
+    for (let i = 0; i < 60; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        // 色をランダムに
+        p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        // 大きさもランダムに
+        const size = 4 + Math.random() * 8;
+        p.style.width = size + 'px'; p.style.height = size + 'px';
+        
+        p.style.left = cx + 'px'; p.style.top = cy + 'px';
+        
+        // 飛び散る角度と距離
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 100 + Math.random() * 400; // かなり広範囲に
+        const tx = Math.cos(angle) * dist;
+        const ty = Math.sin(angle) * dist;
+
+        // アニメーション時間をランダムにして自然に
+        const dur = 0.8 + Math.random() * 0.8;
+        p.style.transition = `transform ${dur}s cubic-bezier(0.25, 1, 0.5, 1), opacity ${dur}s ease-in`;
+        
+        document.body.appendChild(p);
+        
+        // 少し遅らせてアニメーション開始（DOM追加直後だと動かないことがあるため）
+        requestAnimationFrame(() => {
+            p.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
+            p.style.opacity = 0;
+        });
+
+        setTimeout(() => p.remove(), dur * 1000);
+    }
+  },
+  
+  draw: () => {
+    try {
+      document.getElementById('ui-timer').innerText = BATTLE_STATE.time;
+      const pHP = BATTLE_STATE.units.p_boss.hp, eHP = BATTLE_STATE.units.e_boss.hp;
+      if(document.getElementById('e_boss').childNodes[0]) document.getElementById('e_boss').childNodes[0].nodeValue = Math.floor(eHP/3500*100)+'%';
+      if(document.getElementById('p_boss').childNodes[0]) document.getElementById('p_boss').childNodes[0].nodeValue = Math.floor(pHP/3500*100)+'%';
+
+      const svg = document.getElementById('layer-lines');
+      while(svg.lastChild && svg.lastChild.id !== 'drag-line') { svg.removeChild(svg.lastChild); }
+      
+      document.querySelectorAll('.target-frame').forEach(e => e.remove());
+      document.querySelectorAll('.indicators').forEach(el => el.innerHTML = '');
+
+      const pendingActions = {}; 
+      const registerAction = (tid, team, time, role) => {
+          if (!pendingActions[tid]) pendingActions[tid] = [];
+          pendingActions[tid].push({ team, time, role });
+      };
+
+      // (前略) BATTLE_DRAW.draw の中...
+
+      Object.values(BATTLE_STATE.units).forEach(u => {
+        const el = document.getElementById(u.id); if (!el) return;
+        
+        // ... (既存のdead, casting, hasShield などのクラス処理) ...
+        if (u.dead) el.classList.add('dead'); else el.classList.remove('dead');
+        if (u.cast > 0) el.classList.add('casting'); else el.classList.remove('casting');
+        if (u.hasShield) el.style.border = "3px solid white"; else { if (!el.classList.contains('mob')) el.style.border = ""; }
+
+        // ... (既存のバー更新処理) ...
+        const hpBar = el.querySelector('.fill.hp'); if (hpBar) hpBar.style.width = (u.hp / u.max * 100) + '%';
+        const badge = el.querySelector('.badge'); if (badge) badge.innerText = `Lv.${u.lv}`;
+        const xpBar = el.querySelector('.fill.xp'); if (xpBar) xpBar.style.width = (u.xp / u.nxt * 100) + '%';
+
+
+        // ▼▼▼ ステータス表示の追加 (ここから) ▼▼▼
+        // 1. コンテナの取得または作成
+        let stGrid = el.querySelector('.status-grid');
+        if (!stGrid) {
+            stGrid = document.createElement('div');
+            stGrid.className = 'status-grid';
+            el.appendChild(stGrid);
+        }
+
+        // 2. 現在のバフ・デバフを集計
+        const rageCnt = u.buffs ? u.buffs.filter(b => b.type === 'rage').length : 0;
+        const juiceCnt = u.buffs ? u.buffs.filter(b => b.type === 'juice').length : 0;
+        const isWeak = u.vuln; // PoPのデバフ
+
+        // 3. HTMLを生成
+        let stHtml = '';
+        // RAGE (R)
+        if (rageCnt > 0) {
+            stHtml += `<div class="st-icon st-rage">R${rageCnt > 1 ? `<span>${rageCnt}</span>` : ''}</div>`;
+        }
+        // JUICE (J)
+        if (juiceCnt > 0) {
+            stHtml += `<div class="st-icon st-juice">J${juiceCnt > 1 ? `<span>${juiceCnt}</span>` : ''}</div>`;
+        }
+        // WEAK (W)
+// 修正前
+// if (isWeak) {
+//     stHtml += `<div class="st-icon st-weak">W</div>`;
+// }
+
+// ▼▼▼ 修正後：スタック数をバッジで表示 ▼▼▼
+// isWeakではなく、直接 vulnStacks を見るのが確実です
+if (u.vulnStacks > 0) {
+    stHtml += `<div class="st-icon st-weak">W${u.vulnStacks > 1 ? `<span>${u.vulnStacks}</span>` : ''}</div>`;
+}
+// ▲▲▲ 修正ここまで ▲▲▲
+
+        stGrid.innerHTML = stHtml;
+
+        const mask = el.querySelector('.cd-mask');
+        if (mask) {
+          if (u.dead) {
+             mask.style.height = '100%'; mask.style.backgroundColor = 'rgba(0,0,0,0.7)'; mask.innerText = Math.ceil(u.rt); mask.style.fontSize = '24px';
+             mask.style.borderRadius = u.team === 'mob' ? '0' : '8px'; // 死んだ時もモブは四角くする
+          } else if (u.cd > 0) {
+            
+            // ▼▼▼ 修正：モブの場合は一定の濃さと四角形を強制する ▼▼▼
+            if (u.team === 'mob') {
+                mask.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // 常に濃い黒 (透明度0.8固定)
+                mask.style.borderRadius = '0px'; // 角丸なし（完全な四角）
+            } else {
+                // 味方や敵キャラは今まで通り（残り時間で薄くなる演出あり）
+                const alpha = Math.min(0.85, (u.cd / u.maxCd) * 0.85);
+                mask.style.backgroundColor = `rgba(0, 0, 0, ${alpha})`;
+                mask.style.borderRadius = '8px';
+            }
+            // ▲▲▲ 修正ここまで ▲▲▲
+
+            mask.innerText = Math.ceil(u.cd); mask.style.height = '100%'; mask.style.fontSize = '20px';
+          } else { 
+             mask.style.height = '0%'; mask.innerText = ''; mask.style.backgroundColor = 'transparent'; 
+          }
+        }
+        
+        if (u.cast > 0 && u.act) {
+          const safeMax = u.maxCast || 1; const pct = 1.0 - (u.cast / safeMax);
+          BATTLE_DRAW.curvedLine(u.id, u.act.tid, u.team, pct); BATTLE_DRAW.markTarget(u.act.tid, u.team);
+          registerAction(u.act.tid, u.team, u.cast, u.role);
+        } else if (u.reserve) {
+          
+          // ★修正：「青い点線（予約線）」を、プレイヤー('p')の時だけ描画するよう制限します
+          if (u.team === 'p') {
+              BATTLE_DRAW.curvedLine(u.id, u.reserve.tid, u.team, 1.0, true); 
+          }
+          
+          // 四角い枠とドット（ターゲット情報）は攻略に必要なので残します
+          BATTLE_DRAW.markTarget(u.reserve.tid, u.team);
+          registerAction(u.reserve.tid, u.team, 99.0, u.role);
+        }
+      });
+
+      BATTLE_STATE.hand.forEach((c, i) => {
+        const slot = document.getElementById(`slot-${i}`); if(!slot) return;
+        const mask = slot.querySelector('.cd-mask');
+        if (c && c.reservedTarget) {
+          BATTLE_DRAW.curvedLine(`slot-${i}`, c.reservedTarget, 'p', 1.0, true); BATTLE_DRAW.markTarget(c.reservedTarget, 'p');
+          registerAction(c.reservedTarget, 'p', 99.0, 'card');
+          mask.style.height = '100%'; mask.innerText = "WAIT"; mask.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        } else if (c && c.reload > 0) {
+          const pct = (c.reload / c.maxReload) * 100;
+          mask.style.height = pct + '%'; mask.innerText = "RELOAD"; mask.style.backgroundColor = 'rgba(0,0,0,0.85)'; 
+        } else if (c && c.cast > 0 && c.act) {
+          const safeMax = c.maxCast || 1; const pct = 1.0 - (c.cast / safeMax);
+          BATTLE_DRAW.curvedLine(`slot-${i}`, c.act.tid, 'p', pct); BATTLE_DRAW.markTarget(c.act.tid, 'p');
+          registerAction(c.act.tid, 'p', c.cast, 'card');
+          mask.style.height = '0%';
+        } else { mask.style.height = '0%'; mask.innerText = ''; }
+      });
+      
+      [0, 1].forEach(idx => {
+        const slotData = BATTLE_STATE.enemyHand[idx]; const slotEl = document.getElementById(`e_slot_${idx}`); const mask = slotEl.querySelector('.cd-mask');
+        if (slotData.act && slotData.cast > 0) {
+            const safeMax = slotData.maxCast || 1; const pct = 1.0 - (slotData.cast / safeMax);
+            BATTLE_DRAW.curvedLine(`e_slot_${idx}`, slotData.act.tid, 'e', pct); BATTLE_DRAW.markTarget(slotData.act.tid, 'e');
+            registerAction(slotData.act.tid, 'e', slotData.cast, 'card');
+            mask.style.height = '0%'; mask.innerText = ''; mask.style.backgroundColor = 'transparent';
+        } else if (slotData.reload > 0) {
+            const pct = (slotData.reload / slotData.maxReload) * 100; mask.style.backgroundColor = 'rgba(0,0,0,0.85)'; mask.innerText = "RELOAD"; mask.style.height = pct + '%'; 
+        } else { mask.style.height = '0%'; mask.innerText = ''; mask.style.backgroundColor = 'transparent'; }
+      });
+
+            Object.keys(pendingActions).forEach(tid => {
+          const actions = pendingActions[tid];
+          actions.sort((a, b) => a.time - b.time); 
+          const container = document.getElementById(`ind-${tid}`);
+          if(container) {
+              actions.forEach(a => {
+                  const dot = document.createElement('div');
+                  let shapeClass = '';
+                  
+                  // ▼▼ 分岐を追加 ▼▼
+                  if (a.role === 'tank') shapeClass = 'square';
+                  else if (a.role === 'supp') shapeClass = 'tri';
+                  else if (a.role === 'card') shapeClass = 'diamond'; // カードならひし形
+                  
+                  dot.className = `b-dot ${a.team} ${shapeClass} ${a.time < 0.5 ? 'urgent' : ''}`;
+                  container.appendChild(dot);
+              });
+          }
+      });
+
+    } catch(e) { console.error("Draw Loop Error:", e); }
+  }
+};
+
+const SAVE = {
+  KEY: 'neon_spaghetti_v1', // 保存する時の名前
+
+  // データを保存（ステージクリア時や買い物後に呼ぶ）
+  save: () => {
+    // 保存したいデータだけ選ぶ
+    const data = {
+      money: STATE.money,
+      stage: STATE.stage,
+      inventory: STATE.inventory,
+      deck: STATE.deck,
+      mode: STATE.mode,
+      shopItems: STATE.shopItems // ショップの品揃えも保存
+    };
+    localStorage.setItem(SAVE.KEY, JSON.stringify(data));
+    console.log("Game Saved");
+  },
+
+  // データを読み込み（ゲーム起動時に呼ぶ）
+  load: () => {
+    const json = localStorage.getItem(SAVE.KEY);
+    if (!json) return false; // データなし
+    
+    try {
+      const data = JSON.parse(json);
+      // 読み込んだデータを今のSTATEに上書き
+      STATE.money = data.money;
+      STATE.stage = data.stage;
+      STATE.inventory = data.inventory;
+      STATE.deck = data.deck;
+      STATE.mode = data.mode;
+      STATE.shopItems = data.shopItems || [];
+      return true;
+    } catch(e) {
+      console.error("Save data corrupted", e);
+      return false;
+    }
+  },
+
+  // データを削除（ゲームオーバーや全クリ時に呼ぶ）
+  clear: () => {
+    localStorage.removeItem(SAVE.KEY);
+    console.log("Save data cleared");
+  }
+};
+
+window.onload = GAME.init;
+</script>
+</body>
+</html>

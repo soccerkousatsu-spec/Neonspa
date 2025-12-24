@@ -3232,11 +3232,14 @@ if (u.charId === 'pop' && !t.hasShield) {
     if (t.team === 'mob') u.cd = SPECS.cd.mob_kill; 
     else u.cd = t.id.includes('boss') ? SPECS.cd.boss : SPECS.cd.atk; 
 
-    // ▼▼▼ Pizza time: 全てCD 2.0秒 に固定 ▼▼▼
+    // ▼▼▼ Pizza time: ボス攻撃時だけCDを減らす ▼▼▼
     if (u.charId === 'pizza') {
-        u.cd = 3.0;
+        if (t.id.includes('boss')) {
+            u.cd = 1.0; // ★ボスを殴った時は「1秒」にする（ここを好きな秒数に変えてOK）
+        } else {
+            u.cd = 3.0; // それ以外の時は「3秒」
+        }
     }
-    // ▲▲▲
     
     u.maxCd = u.cd;
     
